@@ -28,11 +28,16 @@ theme = args.theme.strip()
 if not theme:
   raise ValueError("Theme cannot be empty.")
 
-system_prompt = (
-  "You design prompt-engineering challenges. Craft a single problem statement for a "
-  "prompting challenge. Keep it professional and concise while still inspiring. "
-  "Always include three labeled sections: Context, Objective, Success Criteria."
-)
+# Read the shared system prompt template from prompts/challenge_system_prompt.txt.
+prompt_file = Path(__file__).parent / "prompts" / "challenge_system_prompt.txt"
+if not prompt_file.is_file():
+  raise FileNotFoundError(
+    f"System prompt template not found at {prompt_file}. Create the file to continue."
+  )
+
+system_prompt = prompt_file.read_text(encoding="utf-8").strip()
+if not system_prompt:
+  raise ValueError("System prompt template cannot be empty.")
 
 client = OpenAI(
   base_url="https://openrouter.ai/api/v1",
@@ -48,7 +53,7 @@ completion = client.chat.completions.create(
     },
     {
       "role": "user",
-      "content": f"{theme}",
+      "content": f"Theme: {theme}\nGenerate the problem statement now.",
     },
   ],
 )
