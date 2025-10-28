@@ -29,6 +29,15 @@ completion = client.chat.completions.create(
           "text": "What is in this image?"
         }
       ]
+    },
+    {
+      "role": "system",
+      "content": [
+        {
+          "type": "text",
+          "text": "Answer in Finnish language."
+        }
+      ]
     }
   ]
 )
