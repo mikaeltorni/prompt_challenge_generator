@@ -28,8 +28,8 @@ theme = args.theme.strip()
 if not theme:
   raise ValueError("Theme cannot be empty.")
 
-# Read the shared system prompt template from prompts/challenge_system_prompt.txt.
-prompt_file = Path(__file__).parent / "prompts" / "challenge_system_prompt.txt"
+# Read the shared system prompt template from prompts/challenge_system_prompt
+prompt_file = Path(__file__).parent / "prompts" / "challenge_system_prompt"
 if not prompt_file.is_file():
   raise FileNotFoundError(
     f"System prompt template not found at {prompt_file}. Create the file to continue."
