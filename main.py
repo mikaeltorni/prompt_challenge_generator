@@ -53,7 +53,7 @@ completion = client.chat.completions.create(
     },
     {
       "role": "user",
-      "content": f"Theme: {theme}\nGenerate the problem statement now.",
+      "content": f"{theme}",
     },
   ],
 )
