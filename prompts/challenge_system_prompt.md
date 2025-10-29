@@ -8,4 +8,15 @@ Craft:
 - Examples to pass the test cases with input / expected output.
 - {{input}} Parameter that is related to the challenge. Only provide the parameter with a simple description.
 
-Return each of these inside triple backticks.
+Return each of these inside triple backticks in the following format:
+```problem_statement
+the problem statement here
+```
+
+```examples
+examples here
+```
+
+```parameter
+{{input}} & the description of the parameter
+```
