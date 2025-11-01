@@ -45,3 +45,7 @@ print(content)
 problem_statement = save_sections(content, theme)
 
 print("pb: ", problem_statement)
+
+test_case_generation_agent = Agent(client, "openai/gpt-5-nano", "test_case_system_prompt.md")
+test_case_content = test_case_generation_agent.send_message(problem_statement)
+print("test case content: ", test_case_content)
