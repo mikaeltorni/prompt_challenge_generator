@@ -49,3 +49,4 @@ def save_sections(content, theme):
         file_path = target_dir / section_name
         text_to_write = f"{section_content}\n" if section_content else ""
         file_path.write_text(text_to_write, encoding="utf-8")
+    return sections.get("problem_statement", "")
