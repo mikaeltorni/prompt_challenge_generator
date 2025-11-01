@@ -19,7 +19,7 @@ class Agent:
                 },
                 {
                 "role": "user",
-                "content": "input",
+                "content": input,
                 },
             ],
         )
