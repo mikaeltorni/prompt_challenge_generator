@@ -3,6 +3,7 @@ import os
 import re
 import sys
 from pathlib import Path
+from src.Agent import Agent
 
 from dotenv import load_dotenv
 from openai import OpenAI
@@ -47,41 +48,14 @@ theme = args.theme.strip()
 if not theme:
   raise ValueError("Theme cannot be empty.")
 
-# Read the shared system prompt template from prompts/challenge_system_prompt
-prompt_file = Path(__file__).parent / "prompts" / "challenge_system_prompt.md"
-if not prompt_file.is_file():
-  raise FileNotFoundError(
-    f"System prompt template not found at {prompt_file}. Create the file to continue."
-  )
-
-system_prompt = prompt_file.read_text(encoding="utf-8").strip()
-if not system_prompt:
-  raise ValueError("System prompt template cannot be empty.")
-
 client = OpenAI(
   base_url="https://openrouter.ai/api/v1",
   api_key=api_key,
 )
 
-completion = client.chat.completions.create(
-  model="openai/gpt-5-nano",
-  messages=[
-    {
-      "role": "system",
-      "content": system_prompt,
-    },
-    {
-      "role": "user",
-      "content": f"{theme}",
-    },
-  ],
-)
-
-message = completion.choices[0].message
-content = getattr(message, "content", "") if message else ""
-
-if content is None:
-  content = ""
+#Creation of the challenge generation agent
+agent = Agent(client, "openai/gpt-5-nano", "challenge_system_prompt.md")
+content = agent.send_message(theme)
 
 print(content)
 
