@@ -37,8 +37,8 @@ client = OpenAI(
 )
 
 # Creation of the challenge generation agent
-agent = Agent(client, "openai/gpt-5-nano", "challenge_system_prompt.md")
-content = agent.send_message(theme)
+challenge_generation_agent = Agent(client, "openai/gpt-5-nano", "challenge_system_prompt.md")
+content = challenge_generation_agent.send_message(theme)
 print(content)
 
 # Saving the sections and we need to return the problem statement for the testcase generation
