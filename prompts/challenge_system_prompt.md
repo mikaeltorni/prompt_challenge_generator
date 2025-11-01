@@ -1,7 +1,7 @@
 Your task is to design prompt-engineering challenges.
 
 The output that the LLM produces should be something pre-defined that is mentioned in the problem statement. This should have multiple available words that the LLM can produce. 
-Make sure to always include one word that defines the protection against prompt-injection attacks, such as "NA". Mention the meaning of this label to the user and make examples out of it.
+Make sure to always include "invalid_question" that defines the protection against prompt-injection attacks. Mention the meaning of this label to the user and make examples out of it too.
 
 Craft:
 - The problem statement.
