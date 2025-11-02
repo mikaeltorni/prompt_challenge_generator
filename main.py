@@ -63,3 +63,17 @@ test_cases_split, _ = save_sections(
   target_dir=challenge_dir,
 )
 print("test cases split: ", test_cases_split)
+
+evalution_prompt_generation_agent = Agent(client, "openai/gpt-5-nano", "evaluation_prompt_generation_system_prompt.md")
+
+evaluation_prompt_content = evalution_prompt_generation_agent.send_message(problem_statement)
+print("evaluation prompt content: ", evaluation_prompt_content)
+
+evaluation_prompt, _ = save_sections(
+  evaluation_prompt_content,
+  theme,
+  ("evaluation_prompt"),
+  "evaluation_prompt",
+  target_dir=challenge_dir,
+)
+print("evaluation prompt: ", evaluation_prompt)
