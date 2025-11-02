@@ -16,7 +16,6 @@ prompts:
 tests:
   - description: 'Test evaluation functionality'
     vars:
-      #system_prompt: file://systemprompt
       user_prompt: file://userprompt.md
       eval_prompt: file://evalprompt.md
     assert:
