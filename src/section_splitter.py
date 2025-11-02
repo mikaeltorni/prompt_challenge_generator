@@ -5,6 +5,8 @@ from pathlib import Path
 SECTION_NAMES = ("problem_statement", "examples", "parameter")
 SECTION_PATTERN = re.compile(r"```(\w+)\s*\n(.*?)```", re.DOTALL)
 
+base_dir = Path("generated_challenges")
+
 def extract_sections(text: str) -> dict[str, str]:
   sections: dict[str, str] = {}
   for match in SECTION_PATTERN.findall(text):
@@ -23,8 +25,7 @@ def save_sections(content, theme):
     if not sections:
         print("No challenge sections were found in the completion output.", file=sys.stderr)
         raise SystemExit(0)
-
-    base_dir = Path("generated_challenges")
+    
     base_dir.mkdir(exist_ok=True)
 
     theme_slug = sanitize_theme(theme)
