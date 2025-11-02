@@ -1,10 +1,9 @@
 import re
 import sys
-from pathlib import Path
+
+from src.file_manager import create_theme_directory
 
 SECTION_PATTERN = re.compile(r"```(\w+)\s*\n(.*?)```", re.DOTALL)
-
-base_dir = Path("generated_challenges")
 
 def _normalize_section_names(section_names) -> tuple[str, ...]:
 	if isinstance(section_names, str):
@@ -20,10 +19,6 @@ def extract_sections(text: str, section_names) -> dict[str, str]:
 			sections[section_name] = match[1].strip()
 	return sections
 
-def sanitize_theme(value: str) -> str:
-	slug = re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")
-	return slug or "challenge"
-
 def save_sections(content, theme, section_names, to_return):
 	section_names = _normalize_section_names(section_names)
 	sections = extract_sections(content, section_names)
@@ -31,19 +26,8 @@ def save_sections(content, theme, section_names, to_return):
 	if not sections:
 		print("No challenge sections were found in the completion output.", file=sys.stderr)
 		raise SystemExit(0)
-	
-	base_dir.mkdir(exist_ok=True)
 
-	theme_slug = sanitize_theme(theme)
-	pattern = re.compile(rf"{re.escape(theme_slug)}-(\d{{3}})$")
-	existing_indices = [
-		int(match.group(1))
-		for entry in base_dir.iterdir()
-			if entry.is_dir() and (match := pattern.fullmatch(entry.name))
-	]
-	next_index = max(existing_indices, default=0) + 1
-	target_dir = base_dir / f"{theme_slug}-{next_index:03d}"
-	target_dir.mkdir()
+	target_dir = create_theme_directory(theme)
 
 	for section_name in section_names:
 		section_content = sections.get(section_name, "")
