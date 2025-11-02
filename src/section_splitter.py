@@ -1,5 +1,6 @@
 import re
 import sys
+from pathlib import Path
 
 from src.file_manager import create_theme_directory
 
@@ -19,7 +20,7 @@ def extract_sections(text: str, section_names) -> dict[str, str]:
 			sections[section_name] = match[1].strip()
 	return sections
 
-def save_sections(content, theme, section_names, to_return):
+def save_sections(content, theme, section_names, to_return, target_dir: Path | None = None):
 	section_names = _normalize_section_names(section_names)
 	sections = extract_sections(content, section_names)
 
@@ -27,7 +28,7 @@ def save_sections(content, theme, section_names, to_return):
 		print("No challenge sections were found in the completion output.", file=sys.stderr)
 		raise SystemExit(0)
 
-	target_dir = create_theme_directory(theme)
+	target_dir = target_dir or create_theme_directory(theme)
 
 	for section_name in section_names:
 		section_content = sections.get(section_name, "")
@@ -41,4 +42,4 @@ def save_sections(content, theme, section_names, to_return):
 		file_path.write_text(text_to_write, encoding="utf-8")
 
 	# Returning the problem statement for the testcase generation
-	return sections.get(to_return, "")
+	return sections.get(to_return, ""), target_dir
