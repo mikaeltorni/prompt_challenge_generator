@@ -1,1 +1,0 @@
-Evaluate if the llm says pong.
