@@ -13,4 +13,4 @@ Constraints:
 - Every `input` and `expected_output` pair must be unique, and the values must not be repeating from one to another. Generate unique values for each of the test cases.
 - Use the keys `input` and `expected_output` (both strings).
 - At least 20% of all cases should expect `invalid_question`.
-- Output only the JSON array—no extra prose.
+- Output only the JSON array; no extra prose.
