@@ -29,6 +29,5 @@ test_cases_split, _ = save_sections(
   "test_cases",
   target_dir=challenge_dir,
 )
-#print("test cases split: ", test_cases_split)
 
 generate_promptfoo_test_cases(challenge_dir)
