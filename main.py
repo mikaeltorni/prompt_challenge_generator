@@ -19,7 +19,7 @@ problem_statement, challenge_dir = save_sections(
   "problem_statement",
 )
 
-test_case_content = agent_config.test_case_generation_agent.send_message("Produce exactly " + str(args.test_case_count) + " test cases with the following problem statement:\n" + problem_statement)
+test_case_content = agent_config.test_case_generator.send_message("Produce exactly " + str(args.test_case_count) + " test cases with the following problem statement:\n" + problem_statement)
 
 test_cases_split, _ = save_sections(
   test_case_content,
