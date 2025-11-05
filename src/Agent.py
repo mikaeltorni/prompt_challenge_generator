@@ -1,6 +1,7 @@
 class Agent:
-    def __init__(self, client, model, system_prompt_name, temperature = 0, max_tokens = 16384):
+    def __init__(self, client, agent_name, model, system_prompt_name, temperature = 0, max_tokens = 16384):
         self.client = client
+        self.agent_name = agent_name
         self.model = model
         self.system_prompt = self.get_system_prompt(system_prompt_name)
 
@@ -12,7 +13,7 @@ class Agent:
         return open(prompt_file, "r").read()
 
     def send_message(self, input):
-        print("Agent received input: " + input)
+        print("Agent + " + self.agent_name + " received input: " + input)
 
         completion = self.client.chat.completions.create(
             model=self.model,
@@ -37,11 +38,11 @@ class Agent:
             print("No content was returned from the agent")
             content = ""
 
-        print("msg sending complete with " + content)
+        print("Agent + " + self.agent_name + " msg sending complete with " + content)
 
         u = getattr(completion, "usage", None)
         if u:
             completion_tokens = getattr(u, "completion_tokens", None) or u.get("completion_tokens")
-            print(f"completion tokens={completion_tokens}")
+            print(f"Agent + {self.agent_name} completion tokens={completion_tokens}")
 
         return content
