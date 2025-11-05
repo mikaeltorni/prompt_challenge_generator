@@ -1,4 +1,5 @@
 import argparse
+from itertools import filterfalse
 import os
 
 from dotenv import load_dotenv
@@ -26,11 +27,19 @@ parser.add_argument(
   required=True,
   help="Theme to focus the prompting challenge around."
 )
+parser.add_argument(
+  "--tcCount",
+  required=False,
+  default=50,
+  help="How many test cases the challenge should have."
+)
 args = parser.parse_args()
 
 theme = args.theme.strip()
 if not theme:
   raise ValueError("Theme cannot be empty.")
+
+test_case_count = int(args.tcCount)
 
 client = OpenAI(
   base_url="https://openrouter.ai/api/v1",
@@ -53,7 +62,7 @@ problem_statement, challenge_dir = save_sections(
 #print("pb: ", problem_statement)
 
 test_case_generation_agent = Agent(client, "openai/gpt-5-nano", "test_case_system_prompt.md")
-test_case_content = test_case_generation_agent.send_message(problem_statement)
+test_case_content = test_case_generation_agent.send_message("Produce exactly " + str(test_case_count) + " test cases with the following problem statement:\n" + problem_statement)
 #print("test case content: ", test_case_content)
 
 test_cases_split, _ = save_sections(

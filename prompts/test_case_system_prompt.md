@@ -9,7 +9,7 @@ Return the cases inside triple backticks in this exact format:
 ```
 
 Constraints:
-- Produce exactly 10 entries.
+- Produce exactly how many entries the user has requested.
 - Every `input` and `expected_output` pair must be unique, and the values must not be repeating from one to another. Generate unique values for each of the test cases.
 - Use the keys `input` and `expected_output` (both strings).
 - At least 20% of all cases should expect `invalid_question`.

@@ -75,10 +75,10 @@ def generate_promptfoo_test_cases(challenge_dir: Path) -> Path:
     )
 
     test_cases = load_test_cases(test_cases_path)
-    if len(test_cases) != 10:
-        raise ValueError(
-            f"Expected exactly 10 test cases, found {len(test_cases)} in {test_cases_path}"
-        )
+    # if len(test_cases) != 10:
+    #     raise ValueError(
+    #         f"Expected exactly 10 test cases, found {len(test_cases)} in {test_cases_path}"
+    #     )
 
     prompt_raw = "{{user_prompt}}"
     eval_prompt_placeholder = "{{eval_prompt}}"
