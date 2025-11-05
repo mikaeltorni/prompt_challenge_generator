@@ -40,7 +40,7 @@ client = OpenAI(
 # Creation of the challenge generation agent
 challenge_generation_agent = Agent(client, "openai/gpt-5-nano", "problem_statement_system_prompt.md")
 content = challenge_generation_agent.send_message(theme)
-print(content)
+# print(content)
 
 # Saving the sections and we need to return the problem statement for the testcase generation
 problem_statement, challenge_dir = save_sections(
@@ -50,7 +50,7 @@ problem_statement, challenge_dir = save_sections(
   "problem_statement",
 )
 
-print("pb: ", problem_statement)
+#print("pb: ", problem_statement)
 
 test_case_generation_agent = Agent(client, "openai/gpt-5-nano", "test_case_system_prompt.md")
 test_case_content = test_case_generation_agent.send_message(problem_statement)
