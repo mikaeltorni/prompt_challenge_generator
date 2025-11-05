@@ -1,30 +1,11 @@
-from itertools import filterfalse
-import os
-
-from dotenv import load_dotenv
-from openai import OpenAI
-from pathlib import Path
-
 from src.Agent import Agent
 from src.section_splitter import save_sections
 from src.test_cast_writer import generate_promptfoo_test_cases
 from src.Args import Args
+from src.ClientConfig import ClientConfig
 
 args = Args()
-
-# Load environment variables from a local .env file if present.
-load_dotenv(dotenv_path=Path(".env"), override=False)
-
-api_key = os.getenv("OPENROUTER_API_KEY")
-if not api_key:
-  raise RuntimeError(
-    "OPENROUTER_API_KEY is missing. Add it to your environment or .env file."
-  )
-
-client = OpenAI(
-  base_url="https://openrouter.ai/api/v1",
-  api_key=api_key,
-)
+client = ClientConfig()
 
 # Creation of the challenge generation agent
 challenge_generation_agent = Agent(client, "openai/gpt-5-nano", "problem_statement_system_prompt.md")
