@@ -12,6 +12,8 @@ class Agent:
         return open(prompt_file, "r").read()
 
     def send_message(self, input):
+        print("Agent received input: " + input)
+
         completion = self.client.chat.completions.create(
             model=self.model,
             messages=[
