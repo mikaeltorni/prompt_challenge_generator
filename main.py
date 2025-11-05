@@ -5,9 +5,9 @@ from src.Args import Args
 from src.AgentConfig import AgentConfig
 from src.ClientConfig import ClientConfig
 
-args = Args()
 client = ClientConfig()
 agent_config = AgentConfig(client)
+args = Args()
 
 content = agent_config.challenge_generator.send_message(args.theme)
 
