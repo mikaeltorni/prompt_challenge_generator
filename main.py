@@ -1,4 +1,3 @@
-from src.Agent import Agent
 from src.section_splitter import save_sections
 from src.test_cast_writer import generate_promptfoo_test_cases
 from src.Args import Args
