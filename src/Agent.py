@@ -1,5 +1,7 @@
 class Agent:
     def __init__(self, client, agent_name, model, system_prompt_name, temperature = 0, max_tokens = 16384):
+        print("Initiating Agent: " + agent_name + " with model: " + model + " with parameters of: " + str(temperature) + " and " + str(max_tokens)
+
         self.client = client
         self.agent_name = agent_name
         self.model = model
