@@ -35,4 +35,11 @@ class Agent:
             print("No content was returned from the agent")
             content = ""
 
+        print("msg sending complete with " + content)
+
+        u = getattr(completion, "usage", None)
+        if u:
+            completion_tokens = getattr(u, "completion_tokens", None) or u.get("completion_tokens")
+            print(f"completion tokens={completion_tokens}")
+
         return content
