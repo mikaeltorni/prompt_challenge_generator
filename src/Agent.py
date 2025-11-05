@@ -1,8 +1,11 @@
 class Agent:
-    def __init__(self, client, model, system_prompt_name):
+    def __init__(self, client, model, system_prompt_name, temperature = 0, max_tokens = 16384):
         self.client = client
         self.model = model
         self.system_prompt = self.get_system_prompt(system_prompt_name)
+
+        self.temperature = temperature
+        self.max_tokens = max_tokens
 
     def get_system_prompt(self, system_prompt_name):
         prompt_file = "prompts/" + system_prompt_name
@@ -21,8 +24,8 @@ class Agent:
                     "content": input,
                 },
             ],
-            temperature=0.7,
-            max_tokens=25
+            temperature=self.temperature,
+            max_tokens=self.max_tokens
         )
 
         message = completion.choices[0].message
