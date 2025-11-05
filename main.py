@@ -1,4 +1,3 @@
-import argparse
 from itertools import filterfalse
 import os
 
@@ -9,6 +8,9 @@ from pathlib import Path
 from src.Agent import Agent
 from src.section_splitter import save_sections
 from src.test_cast_writer import generate_promptfoo_test_cases
+from src.Args import Args
+
+args = Args()
 
 # Load environment variables from a local .env file if present.
 load_dotenv(dotenv_path=Path(".env"), override=False)
@@ -19,28 +21,6 @@ if not api_key:
     "OPENROUTER_API_KEY is missing. Add it to your environment or .env file."
   )
 
-parser = argparse.ArgumentParser(
-  description="Generate a prompting challenge problem statement for a given theme."
-)
-parser.add_argument(
-  "--theme",
-  required=True,
-  help="Theme to focus the prompting challenge around."
-)
-parser.add_argument(
-  "--tcCount",
-  required=False,
-  default=50,
-  help="How many test cases the challenge should have."
-)
-args = parser.parse_args()
-
-theme = args.theme.strip()
-if not theme:
-  raise ValueError("Theme cannot be empty.")
-
-test_case_count = int(args.tcCount)
-
 client = OpenAI(
   base_url="https://openrouter.ai/api/v1",
   api_key=api_key,
@@ -48,13 +28,13 @@ client = OpenAI(
 
 # Creation of the challenge generation agent
 challenge_generation_agent = Agent(client, "openai/gpt-5-nano", "problem_statement_system_prompt.md")
-content = challenge_generation_agent.send_message(theme)
+content = challenge_generation_agent.send_message(args.theme)
 # print(content)
 
 # Saving the sections and we need to return the problem statement for the testcase generation
 problem_statement, challenge_dir = save_sections(
   content,
-  theme,
+  args.theme,
   ("problem_statement", "examples", "parameter"),
   "problem_statement",
 )
@@ -62,12 +42,12 @@ problem_statement, challenge_dir = save_sections(
 #print("pb: ", problem_statement)
 
 test_case_generation_agent = Agent(client, "openai/gpt-5-nano", "test_case_system_prompt.md")
-test_case_content = test_case_generation_agent.send_message("Produce exactly " + str(test_case_count) + " test cases with the following problem statement:\n" + problem_statement)
+test_case_content = test_case_generation_agent.send_message("Produce exactly " + str(args.test_case_count) + " test cases with the following problem statement:\n" + problem_statement)
 #print("test case content: ", test_case_content)
 
 test_cases_split, _ = save_sections(
   test_case_content,
-  theme,
+  args.theme,
   ("test_cases"),
   "test_cases",
   target_dir=challenge_dir,
