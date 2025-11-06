@@ -1,32 +1,69 @@
 ## Prompt Challenge Generator
 
-This project generates prompt challenges and the artifacts needed to evaluate them with promptfoo.
+Generate injection-resistant prompt challenges along with promptfoo evaluation assets from a single command.
 
 ### Prerequisites
-- UV with Python 3.13
-- `OPENROUTER_API_KEY` environment variable configured for the OpenRouter API (use .env file at the root of the project):
-```
-OPENROUTER_API_KEY="sk-or-v1-yourkeyhere"
-```
-- Node.js (for running `npx promptfoo`).
+- [uv](https://github.com/astral-sh/uv) with Python 3.13 installed
+- Node.js (needed later to run `promptfoo`)
+- `OPENROUTER_API_KEY` exported in your environment or stored in `.env` at the project root:
+  ```
+  OPENROUTER_API_KEY="sk-or-v1-yourkeyhere"
+  ```
 
-### Generate a challenge
+### Quick Start
 ```bash
-    uv run main.py --theme "LLM redteaming challenge"
+uv run main.py --theme "LLM redteaming challenge"
 ```
+- `--theme` (required) supplies the creative direction for the challenge. The value is stripped of whitespace and must not be empty.
+- `--tcCount` (optional, default `50`) controls how many test cases the generator requests from the test-case agent. Pass integers only.
 
-The generator creates a new directory under `generated_challenges/`. Each challenge directory contains:
-- `problem_statement`, `examples`, `parameter`, `test_cases`, and `evaluation_prompt`.
-- `test_cases` is a JSON array with exactly 10 objects using `{"input": "...", "expected_output": "..."}`.
-- `parameter` declares the placeholder `{{user_prompt}}` and describes the instructions you will craft. No scenario inputs are appended automatically—the grader supplies them independently.
-- `EDIT_THIS_PROMPT_TO_BEAT_THE_CHALLENGE.md` where you write the user prompt that will be sent verbatim to the model.
-- `eval_test.yaml` configured to run against `openrouter:openai/gpt-4.1`, containing one test entry per JSON case. Each test passes `user_prompt` to the model and evaluates the response via the rubric.
+Both arguments are parsed by `src/Args.py`, which raises a `ValueError` if `--theme` resolves to an empty string.
 
-### Run the promptfoo evaluation
-From inside the generated challenge directory:
+### Configuration and Clients
+- `src/ClientConfig.py` loads `.env`, verifies `OPENROUTER_API_KEY`, and instantiates an `openai.OpenAI` client pinned to `https://openrouter.ai/api/v1`.
+- `src/AgentConfig.py` builds two `src.Agent.Agent` instances with the `openai/gpt-5-nano` model:
+  - **Challenge Generator** uses `prompts/problem_statement_system_prompt.md` to draft the problem statement, examples, and parameter declaration.
+  - **Test Case Generator** uses `prompts/test_case_system_prompt.md` to create the JSON test suite.
+
+### Generation Workflow
+1. **Challenge Drafting** – The challenge agent receives the theme and returns fenced sections inside triple backticks.  
+   `src/section_splitter.save_sections` extracts the `problem_statement`, `examples`, and `parameter` blocks, writes them into a fresh directory under `generated_challenges/<slug-nnn>/`, and returns the persisted problem statement text for downstream use.
+2. **Test Case Production** – The test-case agent is prompted with the saved problem statement and the requested count. Its fenced `test_cases` JSON array is stored in the same directory.
+3. **Promptfoo Assets** – `src/test_cast_writer.generate_promptfoo_test_cases` validates the JSON, creates `EDIT_THIS_PROMPT_TO_BEAT_THE_CHALLENGE.md`, and writes `eval_test.yaml` configured for the `openrouter:openai/gpt-4.1` provider. The rubric embedded in `prompts/evaluation_prompt.md` is referenced through the YAML variables.
+
+`src/file_manager.create_theme_directory` guarantees unique challenge directories by slugifying the theme and incrementing a three-digit suffix.
+
+### Output Layout
+Every successful run populates `generated_challenges/<slug-nnn>/` with:
+- `problem_statement`, `examples`, `parameter` – plain-text files mirroring the agent’s fenced sections.
+- `test_cases` – JSON array with the generated scenarios, including ≥20 % expectations of `invalid_question`.
+- `evaluation_prompt` – copied rubric consumed by promptfoo.
+- `EDIT_THIS_PROMPT_TO_BEAT_THE_CHALLENGE.md` – placeholder instructions for human-crafted prompts.
+- `eval_test.yaml` – promptfoo configuration that binds the `user_prompt`, test inputs, and expected outputs.
+
+### Running Evaluations
+From the generated challenge directory:
 ```bash
-    npx promptfoo@latest eval -c generated_challenges/llm-redteaming-challenge-001/eval_test.yaml --max-concurrency 5 --repeat 1
+npx promptfoo@latest eval -c eval_test.yaml --max-concurrency 5 --repeat 1
 ```
-if you generate many challenges, edit the 001 in the command to try them out
+Edit `EDIT_THIS_PROMPT_TO_BEAT_THE_CHALLENGE.md` between runs to iterate on your prompt. The evaluator feeds each JSON scenario to the model and checks the response against `expected_output`.
 
-Edit `EDIT_THIS_PROMPT_TO_BEAT_THE_CHALLENGE.md` between runs to iterate on your user prompt. Only your instructions are sent to the model; the evaluator separately checks each `input`/`expected_output` pair against the model's reply. The `test_cases` file offers a consistent, machine-readable list of checks, and the evaluation rubric is referenced directly from `evaluation_prompt`.
+### Module Overview
+- `main.py` – Entry point that wires together `ClientConfig`, `AgentConfig`, argument parsing, challenge generation, and post-processing.
+- `src/Agent.py` – Lightweight wrapper around the OpenRouter Chat Completions API. Logs parameters, loads system prompts from `prompts/`, and returns the first completion message.
+- `src/section_splitter.py` – Parses ```section``` fences, writes files, and emits warnings when sections are missing.
+- `src/test_cast_writer.py` – Validates test case structure, writes the prompt-edit placeholder, and renders `eval_test.yaml`.
+- `src/file_manager.py` – Handles directory naming, slugification, and index management.
+- `src/Args.py` – CLI argument parser and validation logic.
+- `src/ClientConfig.py` / `src/AgentConfig.py` – Client bootstrap and agent wiring described above.
+
+### Prompts
+- `prompts/problem_statement_system_prompt.md` – Defines the challenge specification contract, enforces the `invalid_question` fallback, and documents the `{{user_prompt}}` parameter.
+- `prompts/test_case_system_prompt.md` – Demands a fixed-count JSON array with unique values and at least 20 % `invalid_question` expectations.
+- `prompts/evaluation_prompt.md` – Promptfoo rubric that passes only exact matches to `{{expected_output}}`, tolerating minor punctuation drift.
+
+### Dependencies
+The project targets Python 3.13 and relies primarily on:
+- `openai>=2.6.1` for OpenRouter API access
+- `python-dotenv>=1.0.1` for `.env` loading
+Transitive requirements (captured in `uv.lock`) include `httpx`, `pydantic`, `tqdm`, and supporting packages.
