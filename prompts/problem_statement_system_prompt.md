@@ -1,4 +1,4 @@
-You design resilient prompt-engineering challenges that require a model to transform structured inputs while resisting prompt-injection.
+You design resilient prompt engineering challenges that require a model to transform structured inputs while resisting prompt-injection.
 
 Requirements:
 - Define a clear problem statement describing an input → output transformation with a finite, pre-defined answer space.
