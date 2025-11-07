@@ -1,5 +1,20 @@
+import contextvars
 import logging
 from typing import Any
+
+_iteration_var: contextvars.ContextVar[int | None] = contextvars.ContextVar(
+    "project_logger_iteration",
+    default=None,
+)
+
+
+def set_iteration(iteration: int | None):
+    return _iteration_var.set(iteration)
+
+
+def reset_iteration(token):
+    if token is not None:
+        _iteration_var.reset(token)
 
 
 class ProjectLogger:
@@ -39,6 +54,9 @@ class ProjectLogger:
 
     def _prefix(self) -> str:
         prefix = f"[main.py] [{self.module_name}]"
+        iteration = _iteration_var.get()
+        if iteration is not None:
+            prefix += f" [Iteration {iteration}]"
         if self.agent_name:
             return f"{prefix} {self.agent_name}:"
         return prefix

@@ -40,6 +40,7 @@ def save_section(
     *,
     alias=None,
     return_value=True,
+    iteration: int | None = None,
 ):
     logger.entry(
         "save_section",
@@ -49,6 +50,7 @@ def save_section(
         target_dir=target_dir,
         alias=alias,
         return_value=return_value,
+        iteration=iteration,
     )
     section_name_str = _normalize_section_name(section_name)
     sections = extract_section(content, section_name_str)
@@ -57,7 +59,7 @@ def save_section(
         error_message = "No challenge sections were found in the completion output."
         raise SystemExit(error_message)
 
-    target_dir = target_dir or create_theme_directory(theme, alias)
+    target_dir = target_dir or create_theme_directory(theme, alias, iteration)
 
     section_content = sections.get(section_name_str, "")
     file_path = target_dir / section_name_str

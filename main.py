@@ -5,7 +5,7 @@ from src.test_cast_writer import generate_promptfoo_test_cases
 from src.Args import Args
 from src.AgentConfig import AgentConfig
 from src.ClientConfig import ClientConfig
-from src.logger import ProjectLogger
+from src.logger import ProjectLogger, reset_iteration, set_iteration
 
 logger = ProjectLogger("main.py")
 
@@ -15,49 +15,54 @@ args = Args()
 
 
 def _generate_single_challenge(run_number: int):
+    iteration_token = set_iteration(run_number)
     logger.entry("_generate_single_challenge", run_number=run_number)
-    problem_statement_content = agent_config.problem_statement_generator.send_message(args.theme)
+    try:
+        problem_statement_content = agent_config.problem_statement_generator.send_message(args.theme)
 
-    problem_statement, challenge_dir = save_section(
-        problem_statement_content,
-        args.theme,
-        "problem_statement",
-        alias=args.alias,
-    )
-
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        future_examples = executor.submit(agent_config.example_generator.send_message, problem_statement_content)
-        future_parameter = executor.submit(agent_config.parameter_generator.send_message, problem_statement_content)
-        future_test_cases = executor.submit(
-            agent_config.test_case_generator.send_message,
-            "Produce exactly " + str(args.test_case_count) + " test cases with the following problem statement:\n" + problem_statement,
+        problem_statement, challenge_dir = save_section(
+            problem_statement_content,
+            args.theme,
+            "problem_statement",
+            alias=args.alias,
+            iteration=run_number,
         )
 
-        examples_content = future_examples.result()
-        parameter_content = future_parameter.result()
-        test_case_content = future_test_cases.result()
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            future_examples = executor.submit(agent_config.example_generator.send_message, problem_statement_content)
+            future_parameter = executor.submit(agent_config.parameter_generator.send_message, problem_statement_content)
+            future_test_cases = executor.submit(
+                agent_config.test_case_generator.send_message,
+                "Produce exactly " + str(args.test_case_count) + " test cases with the following problem statement:\n" + problem_statement,
+            )
 
-    save_section(
-        examples_content,
-        args.theme,
-        "examples",
-        target_dir=challenge_dir,
-    )
-    save_section(
-        parameter_content,
-        args.theme,
-        "parameter",
-        target_dir=challenge_dir,
-    )
-    save_section(
-        test_case_content,
-        args.theme,
-        "test_cases",
-        target_dir=challenge_dir,
-    )
+            examples_content = future_examples.result()
+            parameter_content = future_parameter.result()
+            test_case_content = future_test_cases.result()
 
-    generate_promptfoo_test_cases(challenge_dir)
-    logger.exit("_generate_single_challenge", return_value=None)
+        save_section(
+            examples_content,
+            args.theme,
+            "examples",
+            target_dir=challenge_dir,
+        )
+        save_section(
+            parameter_content,
+            args.theme,
+            "parameter",
+            target_dir=challenge_dir,
+        )
+        save_section(
+            test_case_content,
+            args.theme,
+            "test_cases",
+            target_dir=challenge_dir,
+        )
+
+        generate_promptfoo_test_cases(challenge_dir)
+        logger.exit("_generate_single_challenge", return_value=None)
+    finally:
+        reset_iteration(iteration_token)
 
 
 def main():
