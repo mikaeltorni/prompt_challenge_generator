@@ -55,5 +55,4 @@ class ProjectLogger:
 
     @staticmethod
     def _safe_repr(value: Any) -> str:
-        text = repr(value)
-        return text if len(text) <= 200 else f"{text[:197]}..."
+        return repr(value)
