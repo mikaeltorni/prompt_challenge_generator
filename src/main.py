@@ -3,6 +3,7 @@ from src.section_splitter import save_section
 from src.test_cast_writer import generate_promptfoo_test_cases
 from src.Args import Args
 from src.ClientConfig import ClientConfig
+from src.file_manager import next_iteration_numbers
 from src.logger import (
     ProjectLogger,
     attach_iteration_log,
@@ -17,12 +18,12 @@ logger = ProjectLogger("src/main.py")
 
 
 def main():
-    iteration = 1
+    args = Args()
+    iteration = next_iteration_numbers(args.theme, args.alias, 1)[0]
     iteration_token = set_iteration(iteration)
     initialize_iteration_log(iteration)
     logger.entry("main")
     try:
-        args = Args()
         client = ClientConfig()
 
         challenge_generation_agent = Agent(

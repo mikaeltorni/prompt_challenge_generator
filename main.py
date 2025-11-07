@@ -14,18 +14,21 @@ from src.logger import (
     run_with_iteration,
     set_iteration,
 )
+from src.file_manager import next_iteration_numbers
 
 logger = ProjectLogger("main.py")
 
+args = Args()
 client = ClientConfig()
 agent_config = AgentConfig(client)
-args = Args()
+iteration_assignments: dict[int, int] = {}
 
 
 def _generate_single_challenge(run_number: int):
-    iteration_token = set_iteration(run_number)
-    initialize_iteration_log(run_number)
-    logger.entry("_generate_single_challenge", run_number=run_number)
+    iteration_value = iteration_assignments[run_number]
+    iteration_token = set_iteration(iteration_value)
+    initialize_iteration_log(iteration_value)
+    logger.entry("_generate_single_challenge", run_number=run_number, iteration=iteration_value)
     try:
         problem_statement_content = agent_config.problem_statement_generator.send_message(args.theme)
 
@@ -34,26 +37,26 @@ def _generate_single_challenge(run_number: int):
             args.theme,
             "problem_statement",
             alias=args.alias,
-            iteration=run_number,
+            iteration=iteration_value,
         )
-        attach_iteration_log(run_number, challenge_dir)
+        attach_iteration_log(iteration_value, challenge_dir)
 
         with concurrent.futures.ThreadPoolExecutor() as executor:
             future_examples = executor.submit(
                 run_with_iteration,
-                run_number,
+                iteration_value,
                 agent_config.example_generator.send_message,
                 problem_statement_content,
             )
             future_parameter = executor.submit(
                 run_with_iteration,
-                run_number,
+                iteration_value,
                 agent_config.parameter_generator.send_message,
                 problem_statement_content,
             )
             future_test_cases = executor.submit(
                 run_with_iteration,
-                run_number,
+                iteration_value,
                 agent_config.test_case_generator.send_message,
                 "Produce exactly "
                 + str(args.test_case_count)
@@ -87,12 +90,18 @@ def _generate_single_challenge(run_number: int):
         generate_promptfoo_test_cases(challenge_dir)
         logger.exit("_generate_single_challenge", return_value=None)
     finally:
-        detach_iteration_log(run_number)
+        detach_iteration_log(iteration_value)
         reset_iteration(iteration_token)
 
 
 def main():
     logger.entry("main")
+    iteration_values = next_iteration_numbers(args.theme, args.alias, args.n)
+    global iteration_assignments
+    iteration_assignments = {
+        run_index + 1: iteration
+        for run_index, iteration in enumerate(iteration_values)
+    }
     if args.n == 1:
         _generate_single_challenge(1)
         logger.exit("main", return_value=None)
