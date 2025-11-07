@@ -10,7 +10,6 @@ args = Args()
 
 content = agent_config.challenge_generator.send_message(args.theme)
 
-# Saving the sections and we need to return the problem statement for the testcase generation
 problem_statement, challenge_dir = save_sections(
   content,
   args.theme,
