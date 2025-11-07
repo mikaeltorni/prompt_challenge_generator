@@ -5,7 +5,15 @@ from src.test_cast_writer import generate_promptfoo_test_cases
 from src.Args import Args
 from src.AgentConfig import AgentConfig
 from src.ClientConfig import ClientConfig
-from src.logger import ProjectLogger, reset_iteration, run_with_iteration, set_iteration
+from src.logger import (
+    ProjectLogger,
+    attach_iteration_log,
+    detach_iteration_log,
+    initialize_iteration_log,
+    reset_iteration,
+    run_with_iteration,
+    set_iteration,
+)
 
 logger = ProjectLogger("main.py")
 
@@ -16,6 +24,7 @@ args = Args()
 
 def _generate_single_challenge(run_number: int):
     iteration_token = set_iteration(run_number)
+    initialize_iteration_log(run_number)
     logger.entry("_generate_single_challenge", run_number=run_number)
     try:
         problem_statement_content = agent_config.problem_statement_generator.send_message(args.theme)
@@ -27,6 +36,7 @@ def _generate_single_challenge(run_number: int):
             alias=args.alias,
             iteration=run_number,
         )
+        attach_iteration_log(run_number, challenge_dir)
 
         with concurrent.futures.ThreadPoolExecutor() as executor:
             future_examples = executor.submit(
@@ -77,6 +87,7 @@ def _generate_single_challenge(run_number: int):
         generate_promptfoo_test_cases(challenge_dir)
         logger.exit("_generate_single_challenge", return_value=None)
     finally:
+        detach_iteration_log(run_number)
         reset_iteration(iteration_token)
 
 

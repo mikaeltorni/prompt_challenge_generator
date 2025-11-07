@@ -3,13 +3,23 @@ from src.section_splitter import save_section
 from src.test_cast_writer import generate_promptfoo_test_cases
 from src.Args import Args
 from src.ClientConfig import ClientConfig
-from src.logger import ProjectLogger, reset_iteration, run_with_iteration, set_iteration
+from src.logger import (
+    ProjectLogger,
+    attach_iteration_log,
+    detach_iteration_log,
+    initialize_iteration_log,
+    reset_iteration,
+    run_with_iteration,
+    set_iteration,
+)
 
 logger = ProjectLogger("src/main.py")
 
 
 def main():
-    iteration_token = set_iteration(1)
+    iteration = 1
+    iteration_token = set_iteration(iteration)
+    initialize_iteration_log(iteration)
     logger.entry("main")
     try:
         args = Args()
@@ -28,8 +38,10 @@ def main():
             args.theme,
             "problem_statement",
             alias=args.alias,
-            iteration=1,
+            iteration=iteration,
         )
+        attach_iteration_log(iteration, challenge_dir)
+
         save_section(
             content,
             args.theme,
@@ -63,9 +75,10 @@ def main():
             target_dir=challenge_dir,
         )
 
-        run_with_iteration(1, generate_promptfoo_test_cases, challenge_dir)
+        run_with_iteration(iteration, generate_promptfoo_test_cases, challenge_dir)
         logger.exit("main", return_value=None)
     finally:
+        detach_iteration_log(iteration)
         reset_iteration(iteration_token)
 
 

@@ -1,11 +1,34 @@
 import contextvars
 import logging
+from pathlib import Path
 from typing import Any
 
 _iteration_var: contextvars.ContextVar[int | None] = contextvars.ContextVar(
     "project_logger_iteration",
     default=None,
 )
+_iteration_handlers: dict[int, logging.Handler] = {}
+
+
+class _IterationFilter(logging.Filter):
+    def __init__(self, iteration: int):
+        super().__init__()
+        self.iteration = iteration
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        return _iteration_var.get() == self.iteration
+
+
+class _IterationBufferHandler(logging.Handler):
+    def __init__(self, iteration: int):
+        super().__init__()
+        self.iteration = iteration
+        self.messages: list[str] = []
+        self.setFormatter(logging.Formatter("%(message)s"))
+
+    def emit(self, record: logging.LogRecord) -> None:
+        if _iteration_var.get() == self.iteration:
+            self.messages.append(self.format(record))
 
 
 def set_iteration(iteration: int | None):
@@ -23,6 +46,50 @@ def run_with_iteration(iteration: int | None, func, *args, **kwargs):
         return func(*args, **kwargs)
     finally:
         reset_iteration(token)
+
+
+def initialize_iteration_log(iteration: int):
+    if iteration in _iteration_handlers:
+        detach_iteration_log(iteration)
+
+    buffer_handler = _IterationBufferHandler(iteration)
+    logger = logging.getLogger("prompt_challenge_generator")
+    logger.addHandler(buffer_handler)
+    _iteration_handlers[iteration] = buffer_handler
+
+
+def attach_iteration_log(iteration: int, target_dir: Path, filename: str = "iteration.log"):
+    logger = logging.getLogger("prompt_challenge_generator")
+    existing_handler = _iteration_handlers.get(iteration)
+
+    target_dir = Path(target_dir)
+    target_dir.mkdir(parents=True, exist_ok=True)
+    log_path = target_dir / filename
+    handler = logging.FileHandler(log_path, mode="w", encoding="utf-8")
+    handler.setFormatter(logging.Formatter("%(message)s"))
+    handler.addFilter(_IterationFilter(iteration))
+
+    logger.addHandler(handler)
+    _iteration_handlers[iteration] = handler
+
+    if isinstance(existing_handler, _IterationBufferHandler):
+        for message in existing_handler.messages:
+            handler.stream.write(message + "\n")
+        logger.removeHandler(existing_handler)
+        existing_handler.close()
+    elif existing_handler:
+        logger.removeHandler(existing_handler)
+        existing_handler.close()
+
+    handler.flush()
+
+
+def detach_iteration_log(iteration: int):
+    handler = _iteration_handlers.pop(iteration, None)
+    if handler:
+        logger = logging.getLogger("prompt_challenge_generator")
+        logger.removeHandler(handler)
+        handler.close()
 
 
 class ProjectLogger:
