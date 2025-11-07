@@ -56,7 +56,7 @@ def save_section(
     sections = extract_section(content, section_name_str)
 
     if not sections:
-        error_message = "No challenge sections were found in the completion output."
+        error_message = "No sections were found in the completion output."
         raise SystemExit(error_message)
 
     target_dir = target_dir or create_theme_directory(theme, alias, iteration)
