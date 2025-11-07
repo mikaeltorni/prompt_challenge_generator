@@ -5,7 +5,7 @@ from src.test_cast_writer import generate_promptfoo_test_cases
 from src.Args import Args
 from src.AgentConfig import AgentConfig
 from src.ClientConfig import ClientConfig
-from src.logger import ProjectLogger, reset_iteration, set_iteration
+from src.logger import ProjectLogger, reset_iteration, run_with_iteration, set_iteration
 
 logger = ProjectLogger("main.py")
 
@@ -29,11 +29,26 @@ def _generate_single_challenge(run_number: int):
         )
 
         with concurrent.futures.ThreadPoolExecutor() as executor:
-            future_examples = executor.submit(agent_config.example_generator.send_message, problem_statement_content)
-            future_parameter = executor.submit(agent_config.parameter_generator.send_message, problem_statement_content)
+            future_examples = executor.submit(
+                run_with_iteration,
+                run_number,
+                agent_config.example_generator.send_message,
+                problem_statement_content,
+            )
+            future_parameter = executor.submit(
+                run_with_iteration,
+                run_number,
+                agent_config.parameter_generator.send_message,
+                problem_statement_content,
+            )
             future_test_cases = executor.submit(
+                run_with_iteration,
+                run_number,
                 agent_config.test_case_generator.send_message,
-                "Produce exactly " + str(args.test_case_count) + " test cases with the following problem statement:\n" + problem_statement,
+                "Produce exactly "
+                + str(args.test_case_count)
+                + " test cases with the following problem statement:\n"
+                + problem_statement,
             )
 
             examples_content = future_examples.result()

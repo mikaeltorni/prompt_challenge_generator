@@ -17,6 +17,14 @@ def reset_iteration(token):
         _iteration_var.reset(token)
 
 
+def run_with_iteration(iteration: int | None, func, *args, **kwargs):
+    token = set_iteration(iteration)
+    try:
+        return func(*args, **kwargs)
+    finally:
+        reset_iteration(token)
+
+
 class ProjectLogger:
     _configured = False
 
