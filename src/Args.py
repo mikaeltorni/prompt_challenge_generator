@@ -1,37 +1,43 @@
 import argparse
 
+from src.logger import ProjectLogger
+
+logger = ProjectLogger("Args.py")
+
+
 class Args:
     def __init__(self):
+        logger.entry("__init__")
         parser = argparse.ArgumentParser(
-        description="Generate a prompting challenge problem statement for a given theme."
+            description="Generate a prompting challenge problem statement for a given theme."
         )
         parser.add_argument(
-        "--theme",
-        required=True,
-        help="Theme to focus the prompting challenge around."
+            "--theme",
+            required=True,
+            help="Theme to focus the prompting challenge around.",
         )
         parser.add_argument(
-        "--tcCount",
-        required=False,
-        default=50,
-        help="How many test cases the challenge should have."
+            "--tcCount",
+            required=False,
+            default=50,
+            help="How many test cases the challenge should have.",
         )
         parser.add_argument(
-        "--alias",
-        required=False,
-        help="Optional directory name prefix for the generated challenge."
+            "--alias",
+            required=False,
+            help="Optional directory name prefix for the generated challenge.",
         )
         parser.add_argument(
-        "--n",
-        type=int,
-        default=1,
-        help="How many challenges to generate for the provided theme."
+            "--n",
+            type=int,
+            default=1,
+            help="How many challenges to generate for the provided theme.",
         )
         parser.add_argument(
-        "--max_concurrent",
-        type=int,
-        default=1,
-        help="Maximum number of simultaneous challenge generations."
+            "--max_concurrent",
+            type=int,
+            default=1,
+            help="Maximum number of simultaneous challenge generations.",
         )
         args = parser.parse_args()
 
@@ -56,3 +62,4 @@ class Args:
         self.max_concurrent = int(args.max_concurrent)
         if self.max_concurrent < 1:
             raise ValueError("--max_concurrent must be greater than or equal to 1.")
+        logger.exit("__init__", return_value=None)

@@ -1,18 +1,21 @@
 import concurrent.futures
-import sys
 
 from src.section_splitter import save_section
 from src.test_cast_writer import generate_promptfoo_test_cases
 from src.Args import Args
 from src.AgentConfig import AgentConfig
 from src.ClientConfig import ClientConfig
+from src.logger import ProjectLogger
+
+logger = ProjectLogger("main.py")
 
 client = ClientConfig()
 agent_config = AgentConfig(client)
 args = Args()
 
+
 def _generate_single_challenge(run_number: int):
-    print(f"Starting challenge {run_number} of {args.n} for theme '{args.theme}'.")
+    logger.entry("_generate_single_challenge", run_number=run_number)
     problem_statement_content = agent_config.problem_statement_generator.send_message(args.theme)
 
     problem_statement, challenge_dir = save_section(
@@ -27,7 +30,7 @@ def _generate_single_challenge(run_number: int):
         future_parameter = executor.submit(agent_config.parameter_generator.send_message, problem_statement_content)
         future_test_cases = executor.submit(
             agent_config.test_case_generator.send_message,
-            "Produce exactly " + str(args.test_case_count) + " test cases with the following problem statement:\n" + problem_statement
+            "Produce exactly " + str(args.test_case_count) + " test cases with the following problem statement:\n" + problem_statement,
         )
 
         examples_content = future_examples.result()
@@ -54,26 +57,28 @@ def _generate_single_challenge(run_number: int):
     )
 
     generate_promptfoo_test_cases(challenge_dir)
-    print(f"Completed challenge {run_number} at {challenge_dir}.")
+    logger.exit("_generate_single_challenge", return_value=None)
+
 
 def main():
-	if args.n == 1:
-		_generate_single_challenge(1)
-		return
+    logger.entry("main")
+    if args.n == 1:
+        _generate_single_challenge(1)
+        logger.exit("main", return_value=None)
+        return
 
-	max_workers = min(args.max_concurrent, args.n)
-	with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
-		futures = {
-			executor.submit(_generate_single_challenge, run_index + 1): run_index + 1
-			for run_index in range(args.n)
-		}
-		for future in concurrent.futures.as_completed(futures):
-			run_number = futures[future]
-			try:
-				future.result()
-			except Exception as exc:
-				print(f"Challenge generation failed for run {run_number}: {exc}", file=sys.stderr)
-				raise
+    max_workers = min(args.max_concurrent, args.n)
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+        futures = {
+            executor.submit(_generate_single_challenge, run_index + 1): run_index + 1
+            for run_index in range(args.n)
+        }
+        for future in concurrent.futures.as_completed(futures):
+            run_number = futures[future]
+            future.result()
+
+    logger.exit("main", return_value=None)
+
 
 if __name__ == "__main__":
-	main()
+    main()

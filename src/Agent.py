@@ -1,21 +1,40 @@
+from src.logger import ProjectLogger
+
+module_logger = ProjectLogger("Agent.py")
+
+
 class Agent:
     def __init__(self, client, agent_name, model, system_prompt_name, temperature = 0, max_tokens = 16384):
-        print("Initiating Agent: " + agent_name + " with model: " + model + " with parameters of temp: " + str(temperature) + " and max_tokens: " + str(max_tokens))
+        agent_logger = module_logger.with_agent(agent_name)
+        agent_logger.entry(
+            "__init__",
+            client=client,
+            agent_name=agent_name,
+            model=model,
+            system_prompt_name=system_prompt_name,
+            temperature=temperature,
+            max_tokens=max_tokens,
+        )
 
         self.client = client
         self.agent_name = agent_name
         self.model = model
-        self.system_prompt = self.get_system_prompt(system_prompt_name)
-
         self.temperature = temperature
         self.max_tokens = max_tokens
+        self.logger = agent_logger
+
+        self.system_prompt = self.get_system_prompt(system_prompt_name)
+        self.logger.exit("__init__", return_value=None)
 
     def get_system_prompt(self, system_prompt_name):
+        self.logger.entry("get_system_prompt", system_prompt_name=system_prompt_name)
         prompt_file = "prompts/" + system_prompt_name
-        return open(prompt_file, "r").read()
+        prompt_content = open(prompt_file, "r").read()
+        self.logger.exit("get_system_prompt", prompt_content=prompt_content)
+        return prompt_content
 
     def send_message(self, input):
-        print("Agent + " + self.agent_name + " received input: " + input)
+        self.logger.entry("send_message", input=input)
 
         completion = self.client.chat.completions.create(
             model=self.model,
@@ -37,14 +56,7 @@ class Agent:
         content = getattr(message, "content", "") if message else ""
 
         if content is None:
-            print("No content was returned from the agent")
             content = ""
 
-        print("Agent + " + self.agent_name + " msg sending complete with " + content)
-
-        u = getattr(completion, "usage", None)
-        if u:
-            completion_tokens = getattr(u, "completion_tokens", None) or u.get("completion_tokens")
-            print(f"Agent + {self.agent_name} completion tokens={completion_tokens}")
-
+        self.logger.exit("send_message", content=content)
         return content

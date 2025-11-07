@@ -4,63 +4,91 @@ import json
 import os
 from pathlib import Path
 
+from src.logger import ProjectLogger
+
 DEFAULT_MODEL = "openrouter:openai/gpt-4.1"
+logger = ProjectLogger("test_cast_writer.py")
+
 
 def first_non_empty_line(path: Path) -> str:
+    logger.entry("first_non_empty_line", path=path)
     if not path.exists():
-        return path.stem
-    for line in path.read_text(encoding="utf-8").splitlines():
-        stripped = line.strip()
-        if stripped:
-            return stripped
-    return path.stem
+        result = path.stem
+    else:
+        result = path.stem
+        for line in path.read_text(encoding="utf-8").splitlines():
+            stripped = line.strip()
+            if stripped:
+                result = stripped
+                break
+    logger.exit("first_non_empty_line", line=result)
+    return result
+
 
 def quote_yaml(value: str) -> str:
+    logger.entry("quote_yaml", value=value)
     escaped = value.replace('"', '\\"')
-    return f'"{escaped}"'
+    quoted = f'"{escaped}"'
+    logger.exit("quote_yaml", quoted=quoted)
+    return quoted
+
 
 def load_test_cases(path: Path) -> list[dict[str, str]]:
+    logger.entry("load_test_cases", path=path)
     if not path.exists():
-        raise FileNotFoundError(f"Missing test_cases file in {path.parent}")
+        error_message = f"Missing test_cases file in {path.parent}"
+        raise FileNotFoundError(error_message)
 
     raw = path.read_text(encoding="utf-8").strip()
     if not raw:
-        raise ValueError(f"No test cases found in {path}")
+        error_message = f"No test cases found in {path}"
+        raise ValueError(error_message)
 
     try:
         data = json.loads(raw)
     except json.JSONDecodeError as exc:
-        raise ValueError(f"test_cases must be valid JSON: {exc}") from exc
+        error_message = f"test_cases must be valid JSON: {exc}"
+        raise ValueError(error_message) from exc
 
     if not isinstance(data, list):
-        raise ValueError("test_cases must be a JSON array.")
+        error_message = "test_cases must be a JSON array."
+        raise ValueError(error_message)
 
     cases: list[dict[str, str]] = []
     for entry in data:
         if not isinstance(entry, dict):
-            raise ValueError("Each test case must be an object with `input` and `expected_output` keys.")
+            error_message = "Each test case must be an object with `input` and `expected_output` keys."
+            raise ValueError(error_message)
         if "input" not in entry or "expected_output" not in entry:
-            raise ValueError("Each test case must include `input` and `expected_output` keys.")
+            error_message = "Each test case must include `input` and `expected_output` keys."
+            raise ValueError(error_message)
 
         input_val = entry["input"]
         expected_val = entry["expected_output"]
 
         if not isinstance(input_val, str) or not isinstance(expected_val, str):
-            raise ValueError("`input` and `expected_output` must be strings.")
+            error_message = "`input` and `expected_output` must be strings."
+            raise ValueError(error_message)
 
         cases.append({"input": input_val, "expected_output": expected_val})
 
+    logger.exit("load_test_cases", cases=cases)
     return cases
 
+
 def write_user_prompt_placeholder(destination: Path):
+    logger.entry("write_user_prompt_placeholder", destination=destination)
     helper = "\n".join(
         [
             "# Edit this prompt to beat the challenge",
         ]
     )
     destination.write_text(helper, encoding="utf-8")
+    logger.exit("write_user_prompt_placeholder", return_value=None)
+
 
 def generate_promptfoo_test_cases(challenge_dir: Path) -> Path:
+    logger.entry("generate_promptfoo_test_cases", challenge_dir=challenge_dir)
     challenge_dir = challenge_dir.resolve()
 
     problem_path = challenge_dir / "problem_statement"
@@ -75,10 +103,6 @@ def generate_promptfoo_test_cases(challenge_dir: Path) -> Path:
     )
 
     test_cases = load_test_cases(test_cases_path)
-    # if len(test_cases) != 10:
-    #     raise ValueError(
-    #         f"Expected exactly 10 test cases, found {len(test_cases)} in {test_cases_path}"
-    #     )
 
     prompt_raw = "{{user_prompt}}"
     eval_prompt_placeholder = "{{eval_prompt}}"
@@ -126,4 +150,5 @@ def generate_promptfoo_test_cases(challenge_dir: Path) -> Path:
     yaml_lines.append("")
 
     eval_test_path.write_text("\n".join(yaml_lines), encoding="utf-8")
+    logger.exit("generate_promptfoo_test_cases", eval_test_path=eval_test_path)
     return eval_test_path
