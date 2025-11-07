@@ -12,7 +12,7 @@ Generate injection-resistant prompt challenges along with promptfoo evaluation a
 
 ### Quick Start
 ```bash
-uv run main.py --theme "the user will provide you cities he wants to travel to, provide IATA codes for each of them" --tcCount=10
+uv run main.py --theme "the user will provide you cities he wants to travel to, provide IATA codes for each of them" --tcCount=10 --alias="IATA codes"
 ```
 - `--theme` (required) supplies the creative direction for the challenge. The value is stripped of whitespace and must not be empty.
 - `--tcCount` (optional, default `50`) controls how many test cases the generator requests from the test-case agent. Pass integers only.
