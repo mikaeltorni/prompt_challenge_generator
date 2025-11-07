@@ -31,19 +31,19 @@ with concurrent.futures.ThreadPoolExecutor() as executor:
     parameter_content = future_parameter.result()
     test_case_content = future_test_cases.result()
 
-examples_split, _ = save_section(
+save_section(
   examples_content,
   args.theme,
   "examples",
   target_dir=challenge_dir,
 )
-parameters_split, _ = save_section(
+save_section(
   parameter_content,
   args.theme,
   "parameter",
   target_dir=challenge_dir,
 )
-test_cases_split, _ = save_section(
+save_section(
   test_case_content,
   args.theme,
   "test_cases",
