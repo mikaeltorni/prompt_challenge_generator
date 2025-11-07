@@ -31,6 +31,7 @@ with concurrent.futures.ThreadPoolExecutor() as executor:
     parameter_content = future_parameter.result()
     test_case_content = future_test_cases.result()
 
+# Could save these with one function call from this file
 save_section(
   examples_content,
   args.theme,
