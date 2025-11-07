@@ -7,10 +7,11 @@ def sanitize_theme(value: str) -> str:
 	slug = re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")
 	return slug or "challenge"
 
-def create_theme_directory(theme):
+def create_theme_directory(theme, alias=None):
 	base_dir.mkdir(parents=True, exist_ok=True)
 
-	theme_slug = sanitize_theme(theme)
+	slug_source = alias if alias else theme
+	theme_slug = sanitize_theme(slug_source)
 	pattern = re.compile(rf"{re.escape(theme_slug)}-(\d{{3}})$")
 	existing_indices = [
 		int(match.group(1))

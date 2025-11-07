@@ -23,7 +23,7 @@ def extract_section(text: str, wanted_section_name) -> dict[str, str]:
 			sections[found_name] = match[1].strip()
 	return sections
 
-def save_section(content, theme, section_name, target_dir: Path | None = None, *, return_value=True):
+def save_section(content, theme, section_name, target_dir: Path | None = None, *, alias=None, return_value=True):
 	section_name_str = _normalize_section_name(section_name)
 	sections = extract_section(content, section_name_str)
 
@@ -31,7 +31,7 @@ def save_section(content, theme, section_name, target_dir: Path | None = None, *
 		print("No challenge sections were found in the completion output.", file=sys.stderr)
 		raise SystemExit(0)
 
-	target_dir = target_dir or create_theme_directory(theme)
+	target_dir = target_dir or create_theme_directory(theme, alias)
 
 	section_content = sections.get(section_name_str, "")
 	if not section_content:

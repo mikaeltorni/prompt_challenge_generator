@@ -16,6 +16,7 @@ problem_statement, challenge_dir = save_section(
   problem_statement_content,
   args.theme,
   "problem_statement",
+  alias=args.alias,
 )
 
 # Running these simultaneously since they all get the data from the problem statement generation
