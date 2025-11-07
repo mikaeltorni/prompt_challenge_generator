@@ -23,7 +23,7 @@ def extract_section(text: str, wanted_section_name) -> dict[str, str]:
 			sections[found_name] = match[1].strip()
 	return sections
 
-def save_section(content, theme, section_name, target_dir: Path | None = None):
+def save_section(content, theme, section_name, target_dir: Path | None = None, *, return_value=True):
 	section_name_str = _normalize_section_name(section_name)
 	sections = extract_section(content, section_name_str)
 
@@ -44,4 +44,5 @@ def save_section(content, theme, section_name, target_dir: Path | None = None):
 	file_path.write_text(text_to_write, encoding="utf-8")
 
 	# Returning the problem statement for the testcase generation
-	return section_content, target_dir
+	if return_value:
+		return section_content, target_dir
