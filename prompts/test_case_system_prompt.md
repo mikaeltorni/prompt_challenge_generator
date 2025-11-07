@@ -7,8 +7,8 @@ Generate comprehensive test coverage for the supplied problem statement.
 - At least 20% of all cases should expect `invalid_question`.
 - Output only the JSON array; no extra prose.
 
-Return the cases inside triple backticks in this exact format:
-```test_cases
+Example format:
+```
 [
   {"input": "<example input>", "expected_output": "<expected output>"},
   ...
