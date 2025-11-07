@@ -1,55 +1,79 @@
+import concurrent.futures
+import sys
+
 from src.section_splitter import save_section
 from src.test_cast_writer import generate_promptfoo_test_cases
 from src.Args import Args
 from src.AgentConfig import AgentConfig
 from src.ClientConfig import ClientConfig
 
-import concurrent.futures
-
 client = ClientConfig()
 agent_config = AgentConfig(client)
 args = Args()
 
-problem_statement_content = agent_config.problem_statement_generator.send_message(args.theme)
+def _generate_single_challenge(run_number: int):
+    print(f"Starting challenge {run_number} of {args.n} for theme '{args.theme}'.")
+    problem_statement_content = agent_config.problem_statement_generator.send_message(args.theme)
 
-problem_statement, challenge_dir = save_section(
-  problem_statement_content,
-  args.theme,
-  "problem_statement",
-  alias=args.alias,
-)
-
-# Running these simultaneously since they all get the data from the problem statement generation
-with concurrent.futures.ThreadPoolExecutor() as executor:
-    future_examples = executor.submit(agent_config.example_generator.send_message, problem_statement_content)
-    future_parameter = executor.submit(agent_config.parameter_generator.send_message, problem_statement_content)
-    future_test_cases = executor.submit(
-        agent_config.test_case_generator.send_message,
-        "Produce exactly " + str(args.test_case_count) + " test cases with the following problem statement:\n" + problem_statement
+    problem_statement, challenge_dir = save_section(
+        problem_statement_content,
+        args.theme,
+        "problem_statement",
+        alias=args.alias,
     )
 
-    examples_content = future_examples.result()
-    parameter_content = future_parameter.result()
-    test_case_content = future_test_cases.result()
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        future_examples = executor.submit(agent_config.example_generator.send_message, problem_statement_content)
+        future_parameter = executor.submit(agent_config.parameter_generator.send_message, problem_statement_content)
+        future_test_cases = executor.submit(
+            agent_config.test_case_generator.send_message,
+            "Produce exactly " + str(args.test_case_count) + " test cases with the following problem statement:\n" + problem_statement
+        )
 
-# Could save these with one function call from this file
-save_section(
-  examples_content,
-  args.theme,
-  "examples",
-  target_dir=challenge_dir,
-)
-save_section(
-  parameter_content,
-  args.theme,
-  "parameter",
-  target_dir=challenge_dir,
-)
-save_section(
-  test_case_content,
-  args.theme,
-  "test_cases",
-  target_dir=challenge_dir,
-)
+        examples_content = future_examples.result()
+        parameter_content = future_parameter.result()
+        test_case_content = future_test_cases.result()
 
-generate_promptfoo_test_cases(challenge_dir)
+    save_section(
+        examples_content,
+        args.theme,
+        "examples",
+        target_dir=challenge_dir,
+    )
+    save_section(
+        parameter_content,
+        args.theme,
+        "parameter",
+        target_dir=challenge_dir,
+    )
+    save_section(
+        test_case_content,
+        args.theme,
+        "test_cases",
+        target_dir=challenge_dir,
+    )
+
+    generate_promptfoo_test_cases(challenge_dir)
+    print(f"Completed challenge {run_number} at {challenge_dir}.")
+
+def main():
+	if args.n == 1:
+		_generate_single_challenge(1)
+		return
+
+	max_workers = min(args.max_concurrent, args.n)
+	with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+		futures = {
+			executor.submit(_generate_single_challenge, run_index + 1): run_index + 1
+			for run_index in range(args.n)
+		}
+		for future in concurrent.futures.as_completed(futures):
+			run_number = futures[future]
+			try:
+				future.result()
+			except Exception as exc:
+				print(f"Challenge generation failed for run {run_number}: {exc}", file=sys.stderr)
+				raise
+
+if __name__ == "__main__":
+	main()

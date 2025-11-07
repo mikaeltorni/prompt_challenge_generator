@@ -21,6 +21,18 @@ class Args:
         required=False,
         help="Optional directory name prefix for the generated challenge."
         )
+        parser.add_argument(
+        "--n",
+        type=int,
+        default=1,
+        help="How many challenges to generate for the provided theme."
+        )
+        parser.add_argument(
+        "--max_concurrent",
+        type=int,
+        default=1,
+        help="Maximum number of simultaneous challenge generations."
+        )
         args = parser.parse_args()
 
         self.theme = args.theme.strip()
@@ -36,3 +48,11 @@ class Args:
             self.alias = None
 
         self.test_case_count = int(args.tcCount)
+
+        self.n = int(args.n)
+        if self.n < 1:
+            raise ValueError("--n must be greater than or equal to 1.")
+
+        self.max_concurrent = int(args.max_concurrent)
+        if self.max_concurrent < 1:
+            raise ValueError("--max_concurrent must be greater than or equal to 1.")

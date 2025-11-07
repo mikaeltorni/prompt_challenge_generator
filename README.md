@@ -12,13 +12,20 @@ Generate injection-resistant prompt challenges along with promptfoo evaluation a
 
 ### Quick Start
 ```bash
-uv run main.py --theme "the user will provide you cities he wants to travel to, provide IATA codes for each of them" --tcCount=10 --alias="IATA codes"
+uv run main.py \
+  --theme "the user will provide you cities he wants to travel to, provide IATA codes for each of them" \
+  --tcCount=10 \
+  --alias "IATA codes" \
+  --n 2 \
+  --max_concurrent 2
 ```
 - `--theme` (required) supplies the creative direction for the challenge. The value is stripped of whitespace and must not be empty.
 - `--tcCount` (optional, default `50`) controls how many test cases the generator requests from the test-case agent. Pass integers only.
 - `--alias` (optional) overrides the folder prefix used inside `generated_challenges/`. Provide a short name such as `--alias Theme`; it will be slugified to `theme` and versioned as `theme-001`, `theme-002`, and so on.
+- `--n` (optional, default `1`) repeats the full generation pipeline so you can capture multiple challenge variants per run.
+- `--max_concurrent` (optional, default `1`) limits how many of those runs execute in parallel to avoid API rate limits.
 
-All arguments are parsed by `src/Args.py`, which raises a `ValueError` if `--theme` resolves to an empty string or `--alias` is supplied without non-whitespace characters.
+All arguments are parsed by `src/Args.py`, which raises a `ValueError` if `--theme` resolves to an empty string, `--alias` lacks non-whitespace characters, or either batching flag is set below `1`.
 
 ### Configuration and Clients
 - `src/ClientConfig.py` loads `.env`, verifies `OPENROUTER_API_KEY`, and instantiates an `openai.OpenAI` client pinned to `https://openrouter.ai/api/v1`.
@@ -28,11 +35,11 @@ All arguments are parsed by `src/Args.py`, which raises a `ValueError` if `--the
 
 ### Generation Workflow
 1. **Challenge Drafting** – The challenge agent receives the theme and returns fenced sections inside triple backticks.  
-   `src/section_splitter.save_section` extracts the `problem_statement`, `examples`, and `parameter` blocks, writes them into a fresh directory under `generated_challenges/<slug-nnn>/` (or `<alias-nnn>/` when `--alias` is set), and returns the persisted problem statement text for downstream use.
+   `src/section_splitter.save_section` extracts the `problem_statement`, `examples`, and `parameter` blocks, writes them into a fresh directory under `generated_challenges/<slug-nnn>/` (or `<alias-nnn>/` when `--alias` is set), and returns the persisted problem statement text for downstream use. The entire step repeats `--n` times, with up to `--max_concurrent` runs executing simultaneously.
 2. **Test Case Production** – The test-case agent is prompted with the saved problem statement and the requested count. Its fenced `test_cases` JSON array is stored in the same directory.
 3. **Promptfoo Assets** – `src/test_cast_writer.generate_promptfoo_test_cases` validates the JSON, creates `EDIT_THIS_PROMPT_TO_BEAT_THE_CHALLENGE.md`, and writes `eval_test.yaml` configured for the `openrouter:openai/gpt-4.1` provider. The rubric embedded in `prompts/evaluation_prompt.md` is referenced through the YAML variables.
 
-`src/file_manager.create_theme_directory` guarantees unique challenge directories by slugifying the alias when provided (otherwise the theme) and incrementing a three-digit suffix.
+`src/file_manager.create_theme_directory` guarantees unique challenge directories by slugifying the alias when provided (otherwise the theme) and incrementing a three-digit suffix, guarding the process with a lock so concurrent runs never collide.
 
 ### Output Layout
 Every successful run populates `generated_challenges/<slug-nnn>/` with:
@@ -50,7 +57,7 @@ npx promptfoo@latest eval -c eval_test.yaml --max-concurrency 5 --repeat 1
 Edit `EDIT_THIS_PROMPT_TO_BEAT_THE_CHALLENGE.md` between runs to iterate on your prompt. The evaluator feeds each JSON scenario to the model and checks the response against `expected_output`.
 
 ### Module Overview
-- `main.py` – Entry point that wires together `ClientConfig`, `AgentConfig`, argument parsing, challenge generation, and post-processing.
+- `main.py` – Entry point that wires together `ClientConfig`, `AgentConfig`, argument parsing, challenge generation, batching (`--n`), and concurrency throttling (`--max_concurrent`).
 - `src/Agent.py` – Lightweight wrapper around the OpenRouter Chat Completions API. Logs parameters, loads system prompts from `prompts/`, and returns the first completion message.
 - `src/section_splitter.py` – Parses ```section``` fences, writes files, and emits warnings when sections are missing.
 - `src/test_cast_writer.py` – Validates test case structure, writes the prompt-edit placeholder, and renders `eval_test.yaml`.
