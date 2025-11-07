@@ -18,7 +18,7 @@ problem_statement, challenge_dir = save_section(
   "problem_statement",
 )
 
-# Running these simultaneously since they get the data from the problem statement generation
+# Running these simultaneously since they all get the data from the problem statement generation
 with concurrent.futures.ThreadPoolExecutor() as executor:
     future_examples = executor.submit(agent_config.example_generator.send_message, problem_statement_content)
     future_parameter = executor.submit(agent_config.parameter_generator.send_message, problem_statement_content)
