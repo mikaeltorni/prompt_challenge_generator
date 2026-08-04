@@ -1,6 +1,15 @@
-## Prompt Challenge Generator
+# Prompt Challenge Generator
 
-Generate injection-resistant prompt challenges along with promptfoo evaluation assets from a single command. Used by [LunaPrompts](https://lunaprompts.com/challenges) Prompt Engineering Challenge Website to some extent.
+Generate **injection-resistant prompt engineering challenges** — complete with
+[promptfoo](https://www.promptfoo.dev/) evaluation assets and test cases — from a
+single command. A two-agent pipeline (challenge generator + test-case generator)
+runs on **OpenRouter** LLMs, writes ready-to-run eval suites, and scales to many
+challenges in parallel. Used to some extent by the
+[LunaPrompts](https://lunaprompts.com/challenges) Prompt Engineering Challenge
+website.
+
+**Topics:** prompt-engineering · prompt-injection · llm-security · promptfoo ·
+llm-evaluation · openrouter · openai · ai-agents · test-generation · python · uv
 
 ### Prerequisites
 - [uv](https://github.com/astral-sh/uv) with Python 3.13 installed
