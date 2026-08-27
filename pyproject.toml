@@ -1,10 +1,22 @@
 [project]
 name = "prompt_challenge_generator"
 version = "0.1.0"
-description = "Add your description here"
+description = "prompt_challenge_generator is a Python CLI that generates prompt engineering challenges with injection-resistant test cases and promptfoo assets for prompt engineers."
 readme = "README.md"
 requires-python = ">=3.13"
+keywords = ["prompt-engineering", "promptfoo", "prompt-injection", "llm-evaluation", "openrouter", "test-generation"]
+license = { file = "LICENSE.md" }
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+]
+
 dependencies = [
     "openai>=2.6.1",
     "python-dotenv>=1.0.1",
 ]
+
+[tool.uv]
+exclude-newer = "24 hours"
