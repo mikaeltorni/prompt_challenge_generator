@@ -19,6 +19,28 @@ repository contains tested prompt examples and challenge references.
 **Topics:** prompt-engineering · prompt-injection · llm-security · promptfoo ·
 llm-evaluation · openrouter · openai · ai-agents · test-generation · python · uv
 
+## Contents
+
+- [Prompt Engineering Challenge Generator Features](#prompt-engineering-challenge-generator-features)
+- [Installation](#installation)
+- [Prompt Engineering Challenge Generator Quickstart](#prompt-engineering-challenge-generator-quickstart)
+- [Prompt Engineering Challenge Generator Configuration and Clients](#prompt-engineering-challenge-generator-configuration-and-clients)
+- [Generation Workflow](#generation-workflow)
+- [Output Layout](#output-layout)
+- [Running Evaluations](#running-evaluations)
+- [Troubleshooting and FAQ](#troubleshooting-and-faq)
+
+## Prompt Engineering Challenge Generator Features
+
+- **Injection-resistant test cases** — generates valid and invalid-question
+  scenarios for adversarial prompt evaluation.
+- **Two-agent pipeline** — separates challenge drafting from test-case
+  production so each output can be inspected independently.
+- **Promptfoo-ready assets** — writes the prompt, test data, rubric, and
+  evaluation configuration into a versioned challenge directory.
+- **Parallel variants** — repeats generation with `--n` while bounding work
+  with `--max_concurrent` to reduce API-rate-limit pressure.
+
 ## Installation
 
 Install [uv](https://github.com/astral-sh/uv), then sync the locked environment:
@@ -35,7 +57,7 @@ uv sync --locked
   OPENROUTER_API_KEY="sk-or-v1-yourkeyhere"
   ```
 
-## Quickstart
+## Prompt Engineering Challenge Generator Quickstart
 ```bash
 uv run main.py \
   --theme "the user will provide you cities he wants to travel to, provide IATA codes for each of them" \
@@ -52,7 +74,7 @@ uv run main.py \
 
 All arguments are parsed by `src/Args.py`, which raises a `ValueError` if `--theme` resolves to an empty string, `--alias` lacks non-whitespace characters, or either batching flag is set below `1`.
 
-## Configuration and Clients
+## Prompt Engineering Challenge Generator Configuration and Clients
 - `src/ClientConfig.py` loads `.env`, verifies `OPENROUTER_API_KEY`, and instantiates an `openai.OpenAI` client pinned to `https://openrouter.ai/api/v1`.
 - `src/AgentConfig.py` builds two `src.Agent.Agent` instances with the `openai/gpt-5-nano` model:
   - **Challenge Generator** uses `prompts/problem_statement_system_prompt.md` to draft the problem statement, examples, and parameter declaration.
