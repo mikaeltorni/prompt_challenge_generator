@@ -1,17 +1,33 @@
-# Prompt Challenge Generator
+# Prompt Challenge Generator — Injection-Resistant Evaluation Challenges
 
-Generate **injection-resistant prompt engineering challenges** — complete with
-[promptfoo](https://www.promptfoo.dev/) evaluation assets and test cases — from a
-single command. A two-agent pipeline (challenge generator + test-case generator)
-runs on **OpenRouter** LLMs, writes ready-to-run eval suites, and scales to many
-challenges in parallel. Used to some extent by the
+[![Last commit](https://img.shields.io/github/last-commit/mikaeltorni/prompt_challenge_generator)](https://github.com/mikaeltorni/prompt_challenge_generator/commits/master)
+[![Commit activity](https://img.shields.io/github/commit-activity/m/mikaeltorni/prompt_challenge_generator)](https://github.com/mikaeltorni/prompt_challenge_generator/graphs/commit-activity)
+[![Issues](https://img.shields.io/github/issues/mikaeltorni/prompt_challenge_generator)](https://github.com/mikaeltorni/prompt_challenge_generator/issues)
+
+prompt_challenge_generator is a Python CLI that generates prompt engineering challenges with injection-resistant test cases and promptfoo assets for prompt engineers.
+
+It creates [promptfoo](https://www.promptfoo.dev/) evaluation assets and test
+cases from a single command. A two-agent pipeline (challenge generator plus
+test-case generator) runs on **OpenRouter** LLMs, writes ready-to-run eval suites,
+and scales to many challenges in parallel. It is used to some extent by the
 [LunaPrompts](https://lunaprompts.com/challenges) Prompt Engineering Challenge
 website.
+
+The companion [LunaPrompts contest solutions](https://github.com/mikaeltorni/luna_prompts_contest_solutions)
+repository contains tested prompt examples and challenge references.
 
 **Topics:** prompt-engineering · prompt-injection · llm-security · promptfoo ·
 llm-evaluation · openrouter · openai · ai-agents · test-generation · python · uv
 
-### Prerequisites
+## Installation
+
+Install [uv](https://github.com/astral-sh/uv), then sync the locked environment:
+
+```bash
+uv sync --locked
+```
+
+## Prerequisites
 - [uv](https://github.com/astral-sh/uv) with Python 3.13 installed
 - Node.js (needed later to run `promptfoo`)
 - `OPENROUTER_API_KEY` exported in your environment or stored in `.env` at the project root:
@@ -19,7 +35,7 @@ llm-evaluation · openrouter · openai · ai-agents · test-generation · python
   OPENROUTER_API_KEY="sk-or-v1-yourkeyhere"
   ```
 
-### Quick Start
+## Quickstart
 ```bash
 uv run main.py \
   --theme "the user will provide you cities he wants to travel to, provide IATA codes for each of them" \
@@ -36,13 +52,13 @@ uv run main.py \
 
 All arguments are parsed by `src/Args.py`, which raises a `ValueError` if `--theme` resolves to an empty string, `--alias` lacks non-whitespace characters, or either batching flag is set below `1`.
 
-### Configuration and Clients
+## Configuration and Clients
 - `src/ClientConfig.py` loads `.env`, verifies `OPENROUTER_API_KEY`, and instantiates an `openai.OpenAI` client pinned to `https://openrouter.ai/api/v1`.
 - `src/AgentConfig.py` builds two `src.Agent.Agent` instances with the `openai/gpt-5-nano` model:
   - **Challenge Generator** uses `prompts/problem_statement_system_prompt.md` to draft the problem statement, examples, and parameter declaration.
   - **Test Case Generator** uses `prompts/test_case_system_prompt.md` to create the JSON test suite.
 
-### Generation Workflow
+## Generation Workflow
 1. **Challenge Drafting** – The challenge agent receives the theme and returns fenced sections inside triple backticks.  
    `src/section_splitter.save_section` extracts the `problem_statement`, `examples`, and `parameter` blocks, writes them into a fresh directory under `generated_challenges/<slug-nnn>/` (or `<alias-nnn>/` when `--alias` is set), and returns the persisted problem statement text for downstream use. The entire step repeats `--n` times, with up to `--max_concurrent` runs executing simultaneously.
 2. **Test Case Production** – The test-case agent is prompted with the saved problem statement and the requested count. Its fenced `test_cases` JSON array is stored in the same directory.
@@ -50,7 +66,7 @@ All arguments are parsed by `src/Args.py`, which raises a `ValueError` if `--the
 
 `src/file_manager.create_theme_directory` guarantees unique challenge directories by slugifying the alias when provided (otherwise the theme) and incrementing a three-digit suffix, guarding the process with a lock so concurrent runs never collide.
 
-### Output Layout
+## Output Layout
 Every successful run populates `generated_challenges/<slug-nnn>/` with:
 - `problem_statement`, `examples`, `parameter` – plain-text files mirroring the agent’s fenced sections.
 - `test_cases` – JSON array with the generated scenarios, including ≥20 % expectations of `invalid_question`.
@@ -58,14 +74,14 @@ Every successful run populates `generated_challenges/<slug-nnn>/` with:
 - `EDIT_THIS_PROMPT_TO_BEAT_THE_CHALLENGE.md` – placeholder instructions for human-crafted prompts.
 - `eval_test.yaml` – promptfoo configuration that binds the `user_prompt`, test inputs, and expected outputs.
 
-### Running Evaluations
+## Running Evaluations
 From the generated challenge directory:
 ```bash
 npx promptfoo@latest eval -c eval_test.yaml --max-concurrency 5 --repeat 1
 ```
 Edit `EDIT_THIS_PROMPT_TO_BEAT_THE_CHALLENGE.md` between runs to iterate on your prompt. The evaluator feeds each JSON scenario to the model and checks the response against `expected_output`.
 
-### Module Overview
+## Module Overview
 - `main.py` – Entry point that wires together `ClientConfig`, `AgentConfig`, argument parsing, challenge generation, batching (`--n`), and concurrency throttling (`--max_concurrent`).
 - `src/Agent.py` – Lightweight wrapper around the OpenRouter Chat Completions API. Logs parameters, loads system prompts from `prompts/`, and returns the first completion message.
 - `src/section_splitter.py` – Parses ```section``` fences, writes files, and emits warnings when sections are missing.
@@ -74,18 +90,59 @@ Edit `EDIT_THIS_PROMPT_TO_BEAT_THE_CHALLENGE.md` between runs to iterate on your
 - `src/Args.py` – CLI argument parser and validation logic.
 - `src/ClientConfig.py` / `src/AgentConfig.py` – Client bootstrap and agent wiring described above.
 
-### Prompts
+## Prompts
 - `prompts/problem_statement_system_prompt.md` – Defines the challenge specification contract, enforces the `invalid_question` fallback, and documents the `{{user_prompt}}` parameter.
 - `prompts/test_case_system_prompt.md` – Demands a fixed-count JSON array with unique values and at least 20 % `invalid_question` expectations.
 - `prompts/evaluation_prompt.md` – Promptfoo rubric that passes only exact matches to `{{expected_output}}`, tolerating minor punctuation drift.
 
-### Dependencies
+## Dependencies
 The project targets Python 3.13 and relies primarily on:
 - `openai>=2.6.1` for OpenRouter API access
 - `python-dotenv>=1.0.1` for `.env` loading
 Transitive requirements (captured in `uv.lock`) include `httpx`, `pydantic`, `tqdm`, and supporting packages.
 
-# Disclaimer
+## Troubleshooting and FAQ
+
+### How does Prompt Challenge Generator create a challenge?
+
+It asks one configured OpenRouter agent for a problem statement and related
+sections, then asks another agent for test cases. The local writers validate and
+persist those sections before creating promptfoo assets.
+
+### What makes the generated challenges injection-resistant?
+
+The challenge prompts explicitly require an `invalid_question` fallback and the
+evaluation assets test that contract. The generator does not claim that an LLM
+challenge is immune to every prompt injection; it produces adversarially aware
+evaluation material for further testing.
+
+### Which API key is required?
+
+Set `OPENROUTER_API_KEY` in the environment or in a root `.env` file. The key is
+read by `src/ClientConfig.py` and must never be committed.
+
+### How do I generate several challenge variants?
+
+Use `--n` for the number of variants and `--max_concurrent` to cap parallel
+generation. Keep the concurrency limit within the provider's rate limits.
+
+### How do I run the generated evaluation?
+
+Change into the generated challenge directory and run the documented
+`npx promptfoo@latest eval -c eval_test.yaml` command. Promptfoo and Node.js are
+needed for this separate evaluation step.
+
+## Contributing
+
+Keep CLI validation, section formats, and generated-file contracts documented.
+Add or update focused tests for parser and writer changes, and never include API
+keys or generated private challenge data in a commit.
+
+## License
+
+Released under the [MIT License](LICENSE.md).
+
+## Disclaimer
 
 This software is provided under the MIT License on an **“as is”** basis, without warranties of any kind. To the maximum extent permitted by applicable law, the authors and copyright holders shall not be liable for any claims, damages, losses, or other liability arising from the use of this software.
 
