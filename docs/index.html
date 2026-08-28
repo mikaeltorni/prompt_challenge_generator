@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prompt Engineering Challenge Generator | Promptfoo Assets</title>
+<meta name="description" content="A Python CLI that generates prompt engineering challenges, injection-resistant test cases, and promptfoo evaluation assets from a theme.">
+<meta name="robots" content="index,follow">
+<link rel="canonical" href="https://mikaeltorni.github.io/prompt_challenge_generator/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Prompt Engineering Challenge Generator">
+<meta property="og:description" content="Generate prompt challenges, test cases, and promptfoo evaluation assets through a two-agent OpenRouter pipeline.">
+<meta property="og:url" content="https://mikaeltorni.github.io/prompt_challenge_generator/">
+<meta property="og:image" content="https://mikaeltorni.github.io/prompt_challenge_generator/generation-flow.svg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Prompt Engineering Challenge Generator">
+<meta name="twitter:description" content="Prompt engineering challenge generation with test cases and promptfoo assets.">
+<meta name="twitter:image" content="https://mikaeltorni.github.io/prompt_challenge_generator/generation-flow.svg">
+<style>body{max-width:50rem;margin:auto;padding:2rem 1.25rem 4rem;font:16px/1.6 system-ui,sans-serif;color:#18202a}a{color:#075ca8}img{max-width:100%;height:auto}pre{padding:1rem;overflow:auto;background:#f2f4f7;border-radius:.4rem}h1{line-height:1.2}h2{margin-top:2rem;border-top:1px solid #d7dce2;padding-top:.75rem}</style>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareSourceCode","name":"Prompt Engineering Challenge Generator","description":"A Python CLI that generates prompt engineering challenges, test cases, and promptfoo evaluation assets.","codeRepository":"https://github.com/mikaeltorni/prompt_challenge_generator","url":"https://mikaeltorni.github.io/prompt_challenge_generator/","programmingLanguage":"Python","license":"https://github.com/mikaeltorni/prompt_challenge_generator/blob/master/LICENSE.md","author":{"@type":"Person","name":"Mikael Törni"},"keywords":"prompt engineering challenge generator,promptfoo,prompt injection testing,OpenRouter,AI evaluation"}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What does the generator create?","acceptedAnswer":{"@type":"Answer","text":"It creates a problem statement, examples, parameters, JSON test cases, and promptfoo evaluation assets in a generated challenge directory."}},{"@type":"Question","name":"How are challenges generated?","acceptedAnswer":{"@type":"Answer","text":"A challenge-generation agent drafts the specification and a test-case agent creates the JSON suite through an OpenRouter-compatible client."}},{"@type":"Question","name":"What is required to run it?","acceptedAnswer":{"@type":"Answer","text":"The documented setup uses Python with uv, Node.js for promptfoo evaluation, and an OPENROUTER_API_KEY for generation."}}]}</script>
+</head>
+<body>
+<main>
+<p><a href="https://github.com/mikaeltorni/prompt_challenge_generator">Source repository on GitHub</a> · <a href="https://www.promptfoo.dev/">promptfoo</a></p>
+<h1>Prompt Engineering Challenge Generator</h1>
+<p>This Python CLI turns a theme into a prompt-engineering challenge, injection-resistant test cases, and ready-to-run promptfoo evaluation assets.</p>
+<figure><img src="generation-flow.svg" alt="A theme enters the challenge generator, passes through challenge and test-case agents, and produces promptfoo assets"><figcaption>Challenge and test-case generation workflow.</figcaption></figure>
+<h2>Quickstart</h2>
+<pre><code>uv sync --locked
+uv run main.py --help
+uv run main.py --theme "the user will provide you cities he wants to travel to, provide IATA codes for each of them" --tcCount=10 --alias "IATA codes" --n 1</code></pre>
+<p>Set <code>OPENROUTER_API_KEY</code> before generation. Use <code>npx promptfoo@latest eval</code> from a generated challenge directory to evaluate an edited prompt.</p>
+<h2>Generated assets</h2>
+<ul><li>Problem statement, examples, and parameter files.</li><li>JSON test cases including invalid-question expectations.</li><li>An editable prompt placeholder and <code>eval_test.yaml</code> for promptfoo.</li></ul>
+<h2>FAQ</h2>
+<h3>Can I generate multiple variants?</h3><p>Yes. Use <code>--n</code> to repeat the full pipeline and <code>--max_concurrent</code> to limit parallel runs for API-rate control.</p>
+<h3>Where are generated challenges stored?</h3><p>The CLI creates unique, slugified directories under <code>generated_challenges/</code>.</p>
+<h3>Is this a hosted model?</h3><p>No. It is a local CLI that calls the OpenRouter-compatible API and writes evaluation assets to disk.</p>
+</main>
+</body>
+</html>
