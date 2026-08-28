@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://mikaeltorni.github.io/prompt_challenge_generator/sitemap.xml
