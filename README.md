@@ -16,9 +16,6 @@ website.
 The companion [LunaPrompts contest solutions](https://github.com/mikaeltorni/luna_prompts_contest_solutions)
 repository contains tested prompt examples and challenge references.
 
-**Topics:** prompt-engineering · prompt-injection · llm-security · promptfoo ·
-llm-evaluation · openrouter · openai · ai-agents · test-generation · python · uv
-
 ## Contents
 
 - [Prompt Engineering Challenge Generator Features](#prompt-engineering-challenge-generator-features)
