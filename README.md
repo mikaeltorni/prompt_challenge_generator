@@ -18,6 +18,11 @@ website.
 The companion [LunaPrompts contest solutions](https://github.com/mikaeltorni/luna_prompts_contest_solutions)
 repository contains tested prompt examples and challenge references.
 
+The related [Prompt Engineering for Software Development research repository](https://github.com/mikaeltorni/prompt_engineering_for_software_development)
+documents multi-agent programming and prompt-evaluation context. Reusable
+coding-agent workflows are maintained in the
+[Programming Prompts library](https://github.com/mikaeltorni/programming_prompts).
+
 **Topics:** prompt-engineering · prompt-injection · llm-security · promptfoo ·
 llm-evaluation · openrouter · openai · ai-agents · test-generation · python · uv
 
