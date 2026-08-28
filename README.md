@@ -6,6 +6,8 @@
 
 prompt_challenge_generator is a Python CLI that generates prompt engineering challenges with injection-resistant test cases and promptfoo assets for prompt engineers.
 
+![Diagram showing a theme entering the challenge and test-case agents before promptfoo evaluation assets are written](docs/generation-flow.svg)
+
 It creates [promptfoo](https://www.promptfoo.dev/) evaluation assets and test
 cases from a single command. A two-agent pipeline (challenge generator plus
 test-case generator) runs on **OpenRouter** LLMs, writes ready-to-run eval suites,

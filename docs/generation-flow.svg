@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-labelledby="title desc">
+  <title id="title">Prompt Challenge Generator workflow</title>
+  <desc id="desc">A theme and CLI options enter a challenge generator agent, which creates problem sections and passes them to a test-case agent that writes promptfoo evaluation assets.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#57606a"/></marker>
+  </defs>
+  <rect width="1280" height="640" rx="28" fill="#f6f8fa"/>
+  <text x="640" y="70" text-anchor="middle" font-family="sans-serif" font-size="34" font-weight="700" fill="#24292f">Prompt challenge generation workflow</text>
+  <rect x="35" y="248" width="210" height="145" rx="18" fill="#0969da"/>
+  <text x="140" y="302" text-anchor="middle" font-family="sans-serif" font-size="24" font-weight="700" fill="white">Theme and CLI</text>
+  <text x="140" y="338" text-anchor="middle" font-family="sans-serif" font-size="18" fill="white">uv run main.py</text>
+  <rect x="315" y="248" width="235" height="145" rx="18" fill="#ddf4ff" stroke="#0969da" stroke-width="3"/>
+  <text x="433" y="300" text-anchor="middle" font-family="sans-serif" font-size="23" font-weight="700" fill="#0550ae">Challenge agent</text>
+  <text x="433" y="337" text-anchor="middle" font-family="sans-serif" font-size="18" fill="#24292f">problem statement</text>
+  <rect x="620" y="225" width="245" height="190" rx="18" fill="#fff8c5" stroke="#bf8700" stroke-width="3"/>
+  <text x="742" y="278" text-anchor="middle" font-family="sans-serif" font-size="23" font-weight="700" fill="#7d4e00">Saved sections</text>
+  <text x="742" y="315" text-anchor="middle" font-family="sans-serif" font-size="18" fill="#24292f">examples and parameters</text>
+  <text x="742" y="348" text-anchor="middle" font-family="sans-serif" font-size="18" fill="#24292f">in generated_challenges/</text>
+  <text x="742" y="383" text-anchor="middle" font-family="sans-serif" font-size="17" fill="#57606a">section_splitter</text>
+  <rect x="935" y="248" width="235" height="145" rx="18" fill="#1a7f37"/>
+  <text x="1052" y="300" text-anchor="middle" font-family="sans-serif" font-size="23" font-weight="700" fill="white">Test-case agent</text>
+  <text x="1052" y="337" text-anchor="middle" font-family="sans-serif" font-size="18" fill="white">promptfoo eval assets</text>
+  <line x1="245" y1="320" x2="307" y2="320" stroke="#57606a" stroke-width="4" marker-end="url(#arrow)"/>
+  <line x1="550" y1="320" x2="612" y2="320" stroke="#57606a" stroke-width="4" marker-end="url(#arrow)"/>
+  <line x1="865" y1="320" x2="927" y2="320" stroke="#57606a" stroke-width="4" marker-end="url(#arrow)"/>
+</svg>
