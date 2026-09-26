@@ -55,6 +55,19 @@ Install [uv](https://github.com/astral-sh/uv), then sync the locked environment:
 uv sync --locked
 ```
 
+## Tests
+
+Run the automated suite with:
+
+```bash
+uv run --locked pytest -q
+```
+
+The suite covers CLI validation, agent and client setup, challenge file
+generation, promptfoo output, iteration logging, and the `main.py` generation
+pipeline. OpenRouter calls are mocked, so tests do not need an API key or
+network access.
+
 ## Prerequisites
 - [uv](https://github.com/astral-sh/uv) with Python 3.13 installed
 - Node.js (needed later to run `promptfoo`)
