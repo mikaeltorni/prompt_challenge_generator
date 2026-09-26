@@ -26,9 +26,9 @@ def first_non_empty_line(path: Path) -> str:
 
 
 def quote_yaml(value: str) -> str:
+    """Serialize a string as a JSON-compatible, double-quoted YAML scalar."""
     logger.entry("quote_yaml", value=value)
-    escaped = value.replace('"', '\\"')
-    quoted = f'"{escaped}"'
+    quoted = json.dumps(value, ensure_ascii=False)
     logger.exit("quote_yaml", quoted=quoted)
     return quoted
 
