@@ -6,12 +6,12 @@
 
 prompt_challenge_generator is a Python CLI that generates prompt engineering challenges with injection-resistant test cases and promptfoo assets for prompt engineers.
 
-![Diagram showing a theme entering the challenge and test-case agents before promptfoo evaluation assets are written](docs/generation-flow.svg)
+![Diagram showing a theme passing through four agents to promptfoo evaluation assets](docs/generation-flow.svg)
 
 It creates [promptfoo](https://www.promptfoo.dev/) evaluation assets and test
-cases from a single command. A two-agent pipeline (challenge generator plus
-test-case generator) runs on **OpenRouter** LLMs, writes ready-to-run eval suites,
-and scales to many challenges in parallel. It is used to some extent by the
+cases from a single command. Four agents use **OpenRouter** LLMs to generate
+a problem statement, examples, a parameter description and test cases. The
+tool writes eval suites and can generate many challenges in parallel. It is used to some extent by the
 [LunaPrompts](https://lunaprompts.com/challenges) Prompt Engineering Challenge
 website.
 
@@ -40,10 +40,10 @@ llm-evaluation · openrouter · openai · ai-agents · test-generation · python
 
 - **Injection-resistant test cases** — generates valid and invalid-question
   scenarios for adversarial prompt evaluation.
-- **Two-agent pipeline** — separates challenge drafting from test-case
-  production so each output can be inspected independently.
-- **Promptfoo-ready assets** — writes the prompt, test data, rubric, and
-  evaluation configuration into a versioned challenge directory.
+- **Four-agent pipeline** — separates problem drafting, examples, parameter
+  description and test-case production so each output can be inspected.
+- **Promptfoo-ready assets** — writes a prompt placeholder, test data and
+  evaluation configuration; the configuration references the shared rubric.
 - **Parallel variants** — repeats generation with `--n` while bounding work
   with `--max_concurrent` to reduce API-rate-limit pressure.
 
@@ -95,25 +95,28 @@ All arguments are parsed by `src/Args.py`, which raises a `ValueError` if `--the
 
 ## Prompt Engineering Challenge Generator Configuration and Clients
 - `src/ClientConfig.py` loads `.env`, verifies `OPENROUTER_API_KEY`, and instantiates an `openai.OpenAI` client pinned to `https://openrouter.ai/api/v1`.
-- `src/AgentConfig.py` builds two `src.Agent.Agent` instances with the `openai/gpt-5-nano` model:
-  - **Challenge Generator** uses `prompts/problem_statement_system_prompt.md` to draft the problem statement, examples, and parameter declaration.
-  - **Test Case Generator** uses `prompts/test_case_system_prompt.md` to create the JSON test suite.
+- `src/AgentConfig.py` builds four `src.Agent.Agent` instances with the `openai/gpt-5-nano` model:
+  - **Challenge Generator** drafts the problem statement.
+  - **Example Generator** creates example input/output pairs.
+  - **Parameter Generator** describes the input variable.
+  - **Test Case Generator** creates the JSON test suite.
 
 ## Generation Workflow
-1. **Challenge Drafting** – The challenge agent receives the theme and returns fenced sections inside triple backticks.  
-   `src/section_splitter.save_section` extracts the `problem_statement`, `examples`, and `parameter` blocks, writes them into a fresh directory under `generated_challenges/<slug-nnn>/` (or `<alias-nnn>/` when `--alias` is set), and returns the persisted problem statement text for downstream use. The entire step repeats `--n` times, with up to `--max_concurrent` runs executing simultaneously.
-2. **Test Case Production** – The test-case agent is prompted with the saved problem statement and the requested count. Its fenced `test_cases` JSON array is stored in the same directory.
-3. **Promptfoo Assets** – `src/test_cast_writer.generate_promptfoo_test_cases` validates the JSON, creates `EDIT_THIS_PROMPT_TO_BEAT_THE_CHALLENGE.md`, and writes `eval_test.yaml` configured for the `openrouter:openai/gpt-4.1` provider. The rubric embedded in `prompts/evaluation_prompt.md` is referenced through the YAML variables.
+1. **Challenge drafting** – The challenge agent receives the theme. Its response is saved as `problem_statement` in a new `generated_challenges/<slug-nnn>/` directory (or `<alias-nnn>/` with `--alias`).
+2. **Parallel generation** – The example, parameter and test-case agents receive the problem statement. Their responses are saved as `examples`, `parameter` and `test_cases`. The test-case request includes the requested count.
+3. **Promptfoo assets** – `src/test_cast_writer.generate_promptfoo_test_cases` validates the test-case JSON, creates `EDIT_THIS_PROMPT_TO_BEAT_THE_CHALLENGE.md`, and writes `eval_test.yaml` for `openrouter:openai/gpt-4.1`. The configuration references the shared `prompts/evaluation_prompt.md` rubric by relative path.
+
+The pipeline repeats `--n` times, with up to `--max_concurrent` challenge runs executing simultaneously.
 
 `src/file_manager.create_theme_directory` guarantees unique challenge directories by slugifying the alias when provided (otherwise the theme) and incrementing a three-digit suffix, guarding the process with a lock so concurrent runs never collide.
 
 ## Output Layout
 Every successful run populates `generated_challenges/<slug-nnn>/` with:
-- `problem_statement`, `examples`, `parameter` – plain-text files mirroring the agent’s fenced sections.
-- `test_cases` – JSON array with the generated scenarios, including ≥20 % expectations of `invalid_question`.
-- `evaluation_prompt` – copied rubric consumed by promptfoo.
+- `problem_statement`, `examples`, `parameter` – plain-text agent responses.
+- `test_cases` – JSON array with the generated scenarios. The prompt requests at least 20% `invalid_question` expectations; the writer validates the JSON shape, not that proportion.
 - `EDIT_THIS_PROMPT_TO_BEAT_THE_CHALLENGE.md` – placeholder instructions for human-crafted prompts.
 - `eval_test.yaml` – promptfoo configuration that binds the `user_prompt`, test inputs, and expected outputs.
+- `iteration.log` – log records for the generation run.
 
 ## Running Evaluations
 From the generated challenge directory:
@@ -125,7 +128,7 @@ Edit `EDIT_THIS_PROMPT_TO_BEAT_THE_CHALLENGE.md` between runs to iterate on your
 ## Module Overview
 - `main.py` – Entry point that wires together `ClientConfig`, `AgentConfig`, argument parsing, challenge generation, batching (`--n`), and concurrency throttling (`--max_concurrent`).
 - `src/Agent.py` – Lightweight wrapper around the OpenRouter Chat Completions API. Logs parameters, loads system prompts from `prompts/`, and returns the first completion message.
-- `src/section_splitter.py` – Parses ```section``` fences, writes files, and emits warnings when sections are missing.
+- `src/section_splitter.py` – Normalizes section names and writes agent responses to files.
 - `src/test_cast_writer.py` – Validates test case structure, writes the prompt-edit placeholder, and renders `eval_test.yaml`.
 - `src/file_manager.py` – Handles directory naming, slugification, and index management.
 - `src/Args.py` – CLI argument parser and validation logic.
@@ -133,6 +136,7 @@ Edit `EDIT_THIS_PROMPT_TO_BEAT_THE_CHALLENGE.md` between runs to iterate on your
 
 ## Prompts
 - `prompts/problem_statement_system_prompt.md` – Defines the challenge specification contract, enforces the `invalid_question` fallback, and documents the `{{user_prompt}}` parameter.
+- `prompts/example_system_prompt.md` / `prompts/parameter_system_prompt.md` – Request examples and the input-variable description.
 - `prompts/test_case_system_prompt.md` – Demands a fixed-count JSON array with unique values and at least 20 % `invalid_question` expectations.
 - `prompts/evaluation_prompt.md` – Promptfoo rubric that passes only exact matches to `{{expected_output}}`, tolerating minor punctuation drift.
 
@@ -146,9 +150,10 @@ Transitive requirements (captured in `uv.lock`) include `httpx`, `pydantic`, `tq
 
 ### How does Prompt Challenge Generator create a challenge?
 
-It asks one configured OpenRouter agent for a problem statement and related
-sections, then asks another agent for test cases. The local writers validate and
-persist those sections before creating promptfoo assets.
+It asks an OpenRouter agent for a problem statement, then requests examples,
+a parameter description and test cases from three other agents in parallel.
+The local writers save the responses and validate the test-case JSON before
+creating promptfoo assets.
 
 ### What makes the generated challenges injection-resistant?
 
